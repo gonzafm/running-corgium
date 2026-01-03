@@ -9,9 +9,6 @@ __pycache__/
 .idea/
 .vscode/
 
-# Dependency management
-uv.lock
-
 # OS generated files
 .DS_Store
 .env

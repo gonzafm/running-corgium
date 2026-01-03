@@ -8,7 +8,7 @@ A tool for helping visualize my running data and build models
 
 # Tasks
   - [x] Create a Basic Shell
-  - [ ] Upload it to github
+  - [x] Upload it to github
   - [ ] Create basic action to build 
   - [ ] Create gRPC Model
   - [ ] Conect to Strava
