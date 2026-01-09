@@ -43,3 +43,4 @@
 ## Contextual Priorities
 - Focus on hybrid mode with gRPC and REST.
 - Ensure Strava OAuth tokens are handled securely (do not log them).
+- Do not commit code. Only add files via `git add -A`.
