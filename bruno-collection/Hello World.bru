@@ -5,12 +5,29 @@ meta {
 }
 
 get {
-  url: http://127.0.0.1:8000/
+  url: http://localhost:8000/hello/Martin
   body: none
   auth: inherit
+}
+
+script:post-response {
+  // const { spawn } = require("child_process");
+  
+  // // Replace 'res.body.url' with the actual path to the URL in your response
+  // const url = res.body.url; 
+  
+  // if (url) {
+  //   const command = process.platform === "win32" ? "explorer" : 
+  //                   process.platform === "darwin" ? "open" : "xdg-open";
+    
+  //   spawn(command, [url], { detached: true, stdio: "ignore" }).unref();
+  //   console.log(`Redirecting to: ${url}`);
+  // }
 }
 
 settings {
   encodeUrl: true
   timeout: 0
+  followRedirects: false
+  maxRedirects: 5
 }
