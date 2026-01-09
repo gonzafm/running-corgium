@@ -10,7 +10,7 @@ A tool for helping visualize my running data and build models
   - [x] Create a Basic Shell
   - [x] Upload it to github
   - [x] Create basic action to build 
-  - [ ] Create gRPC Model
+  - [x] Create gRPC Model
   - [ ] Conect to Strava
 
 # gRPC
