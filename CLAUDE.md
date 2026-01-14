@@ -1,4 +1,4 @@
-# GEMINI.md - Project Context & Instructions
+# CLAUDE.md - Project Context & Instructions
 
 ## Project Overview
 **running-corgium** is a Python-based service that integrates Strava data via FastAPI and gRPC. It serves as a bridge between fitness activities and other internal services.
