@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
 from src.strava import StravaService
 import logging
@@ -10,11 +10,11 @@ logging.basicConfig(
 
 app = FastAPI()
 strava_service = StravaService()
-tokens = dict()
+tokens: dict[str, str] = {}
 
 
 @app.get("/login/{name}")
-async def say_hello(name: str):
+async def login_user(name: str):
     redirect_url = strava_service.get_basic_info()
     return RedirectResponse(url=redirect_url)
 
@@ -22,9 +22,13 @@ async def say_hello(name: str):
 @app.get("/strava/authorize")
 async def authorize(code: str):
     logging.info(f"Strava called back with code: {code}")
-    tokens["Gonzalo"] = str
-    strava_service.authenticate_and_store(code)
-    return {"message": code}
+    try:
+        strava_service.authenticate_and_store(code)
+        logging.info("Authorization successful")
+        return {"message": code}
+    except Exception as e:
+        logging.error(f"Authorization failed: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/strava/athlete")

@@ -16,6 +16,11 @@ If you make changes to the `.proto` files, you will need to regenerate the Pytho
 python -m grpc_tools.protoc -I protos --python_out=src/generated --pyi_out=src/generated --grpc_python_out=src/generated protos/helloworld.proto
 ```
 
+# JustFile Commands
+
+- `just build` - Build the docker image
+- `just run` - Run the docker image
+
 # FrontEnd Commands                                                                                                                                                                                                                                                                    
                                                                                                                                                                                                                                                                               
   - bun dev - Start dev server (port 5173)                                                                                                                                                                                                                                    

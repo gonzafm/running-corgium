@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { stravaApi } from '../api/strava';
 
@@ -7,8 +7,14 @@ export function OAuthCallback() {
   const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
+  const hasAuthorized = useRef(false);
 
   useEffect(() => {
+    // Prevent double execution in React strict mode (codes are single-use)
+    if (hasAuthorized.current) {
+      return;
+    }
+
     const code = searchParams.get('code');
 
     if (!code) {
@@ -17,12 +23,17 @@ export function OAuthCallback() {
       return;
     }
 
+    hasAuthorized.current = true;
+
     const authorize = async () => {
       try {
-        await stravaApi.authorize(code);
+        console.log('Authorizing with code:', code);
+        const response = await stravaApi.authorize(code);
+        console.log('Strava authorization response:', response.message);
         setStatus('success');
-        setTimeout(() => navigate('/dashboard'), 1500);
+        setTimeout(() => navigate('/athlete'), 1500);
       } catch (err) {
+        console.error('Authorization failed:', err);
         setStatus('error');
         setError(err instanceof Error ? err.message : 'Authorization failed');
       }
@@ -53,7 +64,7 @@ export function OAuthCallback() {
   return (
     <div className="oauth-callback">
       <h2>Success!</h2>
-      <p>Redirecting to dashboard...</p>
+      <p>Redirecting to athlete profile...</p>
     </div>
   );
 }
