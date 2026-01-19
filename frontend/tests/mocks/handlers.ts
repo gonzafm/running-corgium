@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, passthrough } from 'msw';
 import type { Athlete, AuthorizeResponse } from '../../src/api/types';
 
 export const mockAthlete: Athlete = {
@@ -11,7 +11,14 @@ export const mockAthlete: Athlete = {
   premium: true,
 };
 
+// Backend URL for integration tests - let these pass through to real server
+const BACKEND_URL = 'http://localhost:8000';
+
 export const handlers = [
+  // Passthrough handlers for integration tests (must be first to take priority)
+  http.get(`${BACKEND_URL}/*`, () => passthrough()),
+  http.post(`${BACKEND_URL}/*`, () => passthrough()),
+
   // GET /strava/authorize - OAuth callback
   http.get('/strava/authorize', ({ request }) => {
     const url = new URL(request.url);

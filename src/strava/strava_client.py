@@ -4,8 +4,7 @@ from src.config import settings
 
 
 class StravaService:
-    client = None
-    tokens = dict()
+    tokens: dict[str, str] = {}
 
     def __init__(self):
         self.client = Client()

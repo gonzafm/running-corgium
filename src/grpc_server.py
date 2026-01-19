@@ -3,8 +3,8 @@ from concurrent import futures
 import time
 
 # Import the generated classes
-from generated import helloworld_pb2
-from generated import helloworld_pb2_grpc
+from src.generated import helloworld_pb2
+from src.generated import helloworld_pb2_grpc
 
 
 # Create a class to define the server functions, derived from

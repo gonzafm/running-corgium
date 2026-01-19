@@ -9,10 +9,15 @@ describe('Strava Integration (Real Backend)', () => {
 
   beforeAll(async () => {
     try {
-      await fetch(`${BACKEND_URL}/strava/athlete`, {
+      const response = await fetch(`${BACKEND_URL}/strava/athlete`, {
         signal: AbortSignal.timeout(2000),
       });
-      backendAvailable = true;
+      // Check that it's actually the FastAPI backend (returns JSON)
+      const contentType = response.headers.get('content-type') || '';
+      backendAvailable = contentType.includes('application/json');
+      if (!backendAvailable) {
+        console.warn('Backend returned non-JSON response, skipping integration tests');
+      }
     } catch {
       console.warn('Backend not available, skipping integration tests');
       backendAvailable = false;
