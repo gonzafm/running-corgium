@@ -6,13 +6,6 @@ A tool for helping visualize my running data and build models
 
     uvicorn src.main:app --reload
 
-# Tasks
-  - [x] Create a Basic Shell
-  - [x] Upload it to github
-  - [x] Create basic action to build 
-  - [x] Create gRPC Model
-  - [ ] Conect to Strava
-
 # gRPC
 
 ## Regenerating gRPC Code
@@ -22,3 +15,15 @@ If you make changes to the `.proto` files, you will need to regenerate the Pytho
 ```bash
 python -m grpc_tools.protoc -I protos --python_out=src/generated --pyi_out=src/generated --grpc_python_out=src/generated protos/helloworld.proto
 ```
+
+# JustFile Commands
+
+- `just build` - Build the docker image
+- `just run` - Run the docker image
+
+# FrontEnd Commands                                                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                                                              
+  - bun dev - Start dev server (port 5173)                                                                                                                                                                                                                                    
+  - bun run test - Run all tests                                                                                                                                                                                                                                              
+  - bun run test:unit - Run unit tests only                                                                                                                                                                                                                                   
+  - bun run test:integration - Run integration tests (requires backend)    
