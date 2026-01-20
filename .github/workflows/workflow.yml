@@ -29,7 +29,11 @@ jobs:
           bun-version: latest
       - name: Install just file
         uses: extractions/setup-just@v3
-        with:
-          just-version: latest
       - name: Install dependencies
         run: just install
+      - name: Lint
+        run: just lint
+      - name: Build (type check)
+        run: just build
+      - name: Test
+        run: just test
