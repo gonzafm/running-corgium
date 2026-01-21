@@ -41,8 +41,8 @@ export function OAuthCallback() {
 
   if (status === 'loading') {
     return (
-      <div className="oauth-callback">
-        <h2>Authorizing...</h2>
+      <div className="text-center p-8">
+        <h2 className="mb-4">Authorizing...</h2>
         <p>Please wait while we complete your login.</p>
       </div>
     );
@@ -50,17 +50,22 @@ export function OAuthCallback() {
 
   if (status === 'error') {
     return (
-      <div className="oauth-callback">
-        <h2>Authorization Failed</h2>
-        <p>{error}</p>
-        <button onClick={() => navigate('/')}>Back to Home</button>
+      <div className="text-center p-8">
+        <h2 className="mb-4">Authorization Failed</h2>
+        <p className="text-red-500 mb-4">{error}</p>
+        <button
+          onClick={() => navigate('/')}
+          className="py-2 px-4 rounded bg-[#14b8a6] text-white hover:bg-[#0d9488] cursor-pointer"
+        >
+          Back to Home
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="oauth-callback">
-      <h2>Success!</h2>
+    <div className="text-center p-8">
+      <h2 className="mb-4">Success!</h2>
       <p>Redirecting to athlete profile...</p>
     </div>
   );

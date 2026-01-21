@@ -10,7 +10,11 @@ export function LoginButton({ username }: LoginButtonProps) {
   };
 
   return (
-    <button onClick={handleLogin} type="button">
+    <button
+      onClick={handleLogin}
+      type="button"
+      className="py-3 px-6 rounded bg-[#14b8a6] text-white hover:bg-[#0d9488] cursor-pointer"
+    >
       Login with Strava
     </button>
   );
