@@ -23,11 +23,11 @@ export function AthleteProfile() {
   }, []);
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return <div className="text-gray-500 italic">Loading...</div>;
   }
 
   if (error) {
-    return <div className="error">Error: {error}</div>;
+    return <div className="text-red-500">Error: {error}</div>;
   }
 
   if (!athlete) {
@@ -35,12 +35,16 @@ export function AthleteProfile() {
   }
 
   return (
-    <div className="athlete-profile">
-      <h2>{athlete.firstname} {athlete.lastname}</h2>
+    <div className="text-left">
+      <h2 className="m-0 mb-2">{athlete.firstname} {athlete.lastname}</h2>
       {athlete.city && athlete.country && (
-        <p>{athlete.city}, {athlete.country}</p>
+        <p className="text-gray-500 m-0 mb-2">{athlete.city}, {athlete.country}</p>
       )}
-      {athlete.premium && <span className="premium-badge">Premium Member</span>}
+      {athlete.premium && (
+        <span className="inline-block bg-[#14b8a6] text-white py-1 px-2 rounded text-sm">
+          Premium Member
+        </span>
+      )}
     </div>
   );
 }
