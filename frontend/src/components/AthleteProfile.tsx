@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { stravaApi } from '../api/strava';
-import type { Athlete } from '../api/types';
+import type {Activity, Athlete} from '../api/types';
 
 export function AthleteProfile() {
   const [athlete, setAthlete] = useState<Athlete | null>(null);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -11,7 +12,9 @@ export function AthleteProfile() {
     const fetchAthlete = async () => {
       try {
         const data = await stravaApi.getAthlete();
+        const activityResponse = await stravaApi.getActivities();
         setAthlete(data);
+        setActivities(activityResponse);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch athlete');
       } finally {
@@ -45,6 +48,28 @@ export function AthleteProfile() {
           Premium Member
         </span>
       )}
+
+      <h3 className="mt-4 mb-2">Recent Activities</h3>
+      <table className="border-collapse w-full">
+        <thead>
+          <tr>
+            <th className="py-2 px-4 border border-teal-900 bg-teal-900 text-teal-50">Name</th>
+            <th className="py-2 px-4 border border-teal-900 bg-teal-900 text-teal-50">Type</th>
+            <th className="py-2 px-4 border border-teal-900 bg-teal-900 text-teal-50">Distance</th>
+            <th className="py-2 px-4 border border-teal-900 bg-teal-900 text-teal-50">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {activities.map((activity, index) => (
+            <tr key={index} className="odd:bg-teal-500 even:bg-teal-100 border-teal-300 border-teal-300">
+              <td className="py-2 px-4  ">{activity.name}</td>
+              <td className="py-2 px-4  ">{activity.type}</td>
+              <td className="py-2 px-4  ">{activity.distance} km</td>
+              <td className="py-2 px-4  ">{activity.start_date}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

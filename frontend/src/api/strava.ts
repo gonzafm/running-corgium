@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { AuthorizeResponse, Athlete } from './types';
+import type { AuthorizeResponse, Athlete, Activity } from './types';
 
 export const stravaApi = {
   authorize: (code: string): Promise<AuthorizeResponse> => {
@@ -8,6 +8,10 @@ export const stravaApi = {
 
   getAthlete: (): Promise<Athlete> => {
     return apiClient.get<Athlete>('/strava/athlete');
+  },
+
+  getActivities: (): Promise<Activity[]> => {
+    return apiClient.get<Activity[]>('/strava/activities');
   },
 
   getLoginUrl: (name: string): string => {
