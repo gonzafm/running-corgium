@@ -22,12 +22,15 @@ def test_login_redirect(mock_strava_service):
 @patch("src.main.strava_service")
 def test_authorize(mock_strava_service):
     code = "test_code"
+    session_id = "test_session_id"
 
-    response = client.get(f"/strava/authorize?code={code}")
+    response = client.get(
+        f"/strava/authorize?code={code}", cookies={"session_id": session_id}
+    )
 
     assert response.status_code == 200
     assert response.json() == {"message": code}
-    mock_strava_service.authenticate_and_store.assert_called_once_with(code)
+    mock_strava_service.authenticate_and_store.assert_called_once_with(session_id, code)
 
 
 @patch("src.main.strava_service")

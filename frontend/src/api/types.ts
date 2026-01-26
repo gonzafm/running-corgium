@@ -21,6 +21,19 @@ export interface Athlete {
   updated_at?: string;
 }
 
+export interface Activity {
+  id: number;
+  name: string;
+  distance: number;
+  moving_time: number;
+  elapsed_time: number;
+  total_elevation_gain: number;
+  type: 'Ride' | 'Run' | 'Swim' | 'Hike' | 'Workout';
+  start_date: string;
+  start_date_local: string;
+  timezone: string;
+}
+
 // Error response shape
 export interface ApiError {
   detail?: string;
