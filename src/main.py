@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException, Cookie
 from fastapi.responses import RedirectResponse
 from src.strava import StravaService
@@ -9,8 +11,16 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
-app = FastAPI()
 strava_service = StravaService()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await strava_service.postgres_service.initialize()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/login/{name}")
@@ -52,6 +62,6 @@ async def list_activities(session_id: str = Cookie(None)):
     if not session_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
-        return strava_service.list_activities(session_id)
+        return await strava_service.list_activities(session_id)
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))

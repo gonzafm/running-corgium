@@ -9,6 +9,13 @@
 - **Communication:** gRPC (Protobuf definitions in `/protos`) and REST
 - **Third-party APIs:** Strava API via `stravalib`
 - **Quality Tools:** Ruff (linting), Mypy (types), Pytest (testing)
+- **Database:** Postgres via asyncpg
+
+## Functional Requirements
+
+- /strava/activities: should return a list of all activities
+- The guiding principle is to call strava API as little as possible. For that purporse replicating in DB is desirable.
+- Once a date from activities is retrieved, it should be persisted in DB. Only when new dates are requested, those dates should be retrieved from strava API
 
 ## Development Guidelines
 
@@ -17,6 +24,7 @@
 - **Service Layer:** `src/grpc_server.py` implements the gRPC service.
 - **Client Layer:** `src/strava/` contains logic for interacting with external APIs.
 - **Generated Code:** Do not manually edit files in `src/generated/`. These are updated via `protoc`.
+- **Database:** Module `src/database`. Use `asyncpg` for all database operations.
 
 ### Coding Standards
 - Use strict type hinting everywhere.
