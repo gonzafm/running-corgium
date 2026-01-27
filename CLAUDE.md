@@ -30,6 +30,7 @@
 - Use strict type hinting everywhere.
 - Prefer `async/await` for all I/O bound operations (FastAPI and Strava client).
 - Follow PEP 8 via Ruff configuration.
+- Follow best practices from Effective Python.
 
 ### Testing
 - All new features must have corresponding tests in `/tests`.

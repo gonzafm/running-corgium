@@ -9,8 +9,6 @@ dependencies = [
     "asyncpg-stubs>=0.31.1",
     "fastapi>=0.128.0",
     "frpc>=0.0.6",
-    "grpcio>=1.76.0",
-    "grpcio-tools>=1.76.0",
     "pydantic-settings>=2.12.0",
     "pytest>=9.0.2",
     "stravalib>=2.4",
@@ -30,7 +28,6 @@ testpaths = ["tests"]
 
 [dependency-groups]
 dev = [
-    "grpc-stubs>=1.53.0",
     "mypy>=1.19.1",
     "pre-commit>=4.5.0",
     "ruff>=0.14.9",
