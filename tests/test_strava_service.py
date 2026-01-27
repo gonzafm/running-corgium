@@ -65,16 +65,21 @@ class TestStravaService(unittest.IsolatedAsyncioTestCase):
         session_id = "test-session-123"
         self.service.tokens[session_id] = "mock_token"
 
+        # Create mock SummaryActivity objects
+        mock_activity1 = MagicMock()
+        mock_activity1.id = 111
+        mock_activity1.name = "Morning Run"
+        mock_activity2 = MagicMock()
+        mock_activity2.id = 222
+        mock_activity2.name = "Evening Walk"
+
         self.service.postgres_service = MagicMock()
         self.service.postgres_service.get_last_sync_date.return_value = datetime(
             2024, 1, 10, tzinfo=timezone.utc
         )
         self.service.postgres_service.is_activity_synced.return_value = True
         self.service.postgres_service.get_activities = AsyncMock(
-            return_value=[
-                {"strava_id": 111, "strava_response": "{}", "create_date": None},
-                {"strava_id": 222, "strava_response": "{}", "create_date": None},
-            ]
+            return_value=[mock_activity1, mock_activity2]
         )
 
         # No new activities from Strava
@@ -84,6 +89,8 @@ class TestStravaService(unittest.IsolatedAsyncioTestCase):
 
         # Should return activities from database
         self.assertEqual(len(result), 2)
+        self.assertEqual(result[0].name, "Morning Run")
+        self.assertEqual(result[1].name, "Evening Walk")
         self.service.postgres_service.get_activities.assert_called_once_with(limit=100)
 
     async def test_list_activities_syncs_new_activities_first(self):

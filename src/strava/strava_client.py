@@ -1,7 +1,7 @@
-from stravalib import Client
 import logging
 
-from stravalib.model import Duration, RelaxedActivityType, SummaryActivity
+from stravalib import Client
+from stravalib.model import SummaryActivity
 
 from src.config import settings
 from src.database.postgres_service import PostgresService
@@ -45,12 +45,14 @@ class StravaService:
         self.client.access_token = self.tokens[session_id]
         return self.client
 
-    async def list_activities(self, session_id: str, limit: int = 100) -> list[dict]:
+    async def list_activities(
+        self, session_id: str, limit: int = 100
+    ) -> list[SummaryActivity]:
         """Return all activities, syncing new ones from Strava first.
 
         1. Fetches only NEW activities from Strava API (after last sync date)
         2. Stores new activities in the database
-        3. Returns ALL activities from the database
+        3. Returns ALL activities from the database as Pydantic models
         """
         logging.info(f"list_activities called for session {session_id}, limit={limit}")
         try:
@@ -63,11 +65,9 @@ class StravaService:
 
             # Return all activities from database
             db_activities = await self.postgres_service.get_activities(limit=limit)
-            logging.info(
-                f"Returning {len(db_activities)} activities from database"
-            )
+            logging.info(f"Returning {len(db_activities)} activities from database")
             if db_activities:
-                logging.info(f"First activity sample: {db_activities[0]}")
+                logging.info(f"First activity: {db_activities[0].name} (ID: {db_activities[0].id})")
             return db_activities
         except ValueError:
             raise
@@ -112,28 +112,6 @@ class StravaService:
 
         logging.info(f"Sync complete: {new_count} new activities synced from Strava")
         return new_count
-
-    def map_activity(
-        self, activity: SummaryActivity
-    ) -> dict[str, int | None | str | float | Duration | RelaxedActivityType]:
-        return {
-            "id": activity.id,
-            "name": activity.name,
-            "distance": float(activity.distance) if activity.distance else 0,
-            "moving_time": activity.moving_time if activity.moving_time else 0,
-            "elapsed_time": activity.elapsed_time if activity.elapsed_time else 0,
-            "total_elevation_gain": float(activity.total_elevation_gain)
-            if activity.total_elevation_gain
-            else 0,
-            "type": activity.type,
-            "start_date": activity.start_date.isoformat()
-            if activity.start_date
-            else None,
-            "start_date_local": activity.start_date_local.isoformat()
-            if activity.start_date_local
-            else None,
-            "timezone": str(activity.timezone) if activity.timezone else None,
-        }
 
     def get_athlete(self, session_id: str):
         """Fetch athlete data for a session."""

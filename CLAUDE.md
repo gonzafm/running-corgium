@@ -21,7 +21,6 @@
 
 ### Architecture
 - **API Layer:** `src/main.py` handles REST endpoints.
-- **Service Layer:** `src/grpc_server.py` implements the gRPC service.
 - **Client Layer:** `src/strava/` contains logic for interacting with external APIs.
 - **Generated Code:** Do not manually edit files in `src/generated/`. These are updated via `protoc`.
 - **Database:** Module `src/database`. Use `asyncpg` for all database operations.
@@ -43,13 +42,9 @@
 - **Run Tests:** `uv run pytest`
 - **Linting:** `uv run ruff check .`
 - **Type Checking:** `uv run mypy .`
-- **Regenerate gRPC:** 
-  ```bash
-  python -m grpc_tools.protoc -I./protos --python_out=src/generated --grpc_python_out=src/generated ./protos/helloworld.proto
-  ```
-  *(Note: Adjust the output path if necessary to match import structures)*
+
 
 ## Contextual Priorities
-- Focus on hybrid mode with gRPC and REST.
+- Focus on REST.
 - Ensure Strava OAuth tokens are handled securely (do not log them).
 - Do not commit code. Only add files via `git add -A`.

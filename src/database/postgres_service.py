@@ -1,8 +1,9 @@
 import asyncpg
-import json
-from datetime import datetime, timedelta, timezone
-from stravalib.strava_model import SummaryActivity
 import logging
+from datetime import datetime, timedelta, timezone
+
+from pydantic import ValidationError
+from stravalib.model import SummaryActivity
 
 
 class PostgresService:
@@ -56,8 +57,8 @@ class PostgresService:
         """Check if an activity has already been synced."""
         return strava_id in self._synced_ids
 
-    async def get_activities(self, limit: int = 100) -> list[dict]:
-        """Get activities from the database, parsing the stored JSON response."""
+    async def get_activities(self, limit: int = 100) -> list[SummaryActivity]:
+        """Get activities from the database as Pydantic models."""
         logging.info(f"Fetching up to {limit} activities from database")
         conn = await self._get_connection()
         try:
@@ -70,18 +71,13 @@ class PostgresService:
             )
             logging.info(f"Found {len(rows)} activities in database")
 
-            activities = []
+            activities: list[SummaryActivity] = []
             for row in rows:
                 try:
-                    # Parse the stored JSON response
-                    activity_data = json.loads(row["strava_response"])
-                    activity_data["strava_id"] = row["strava_id"]
-                    activity_data["create_date"] = (
-                        row["create_date"].isoformat() if row["create_date"] else None
-                    )
-                    activities.append(activity_data)
-                    logging.debug(f"Parsed activity {row['strava_id']}: {activity_data.get('name', 'Unknown')}")
-                except json.JSONDecodeError as e:
+                    activity = SummaryActivity.model_validate_json(row["strava_response"])
+                    activities.append(activity)
+                    logging.debug(f"Parsed activity {row['strava_id']}: {activity.name}")
+                except ValidationError as e:
                     logging.error(f"Failed to parse activity {row['strava_id']}: {e}")
 
             logging.info(f"Returning {len(activities)} parsed activities")
