@@ -24,9 +24,9 @@ def test_authorize(mock_strava_service):
     code = "test_code"
     session_id = "test_session_id"
 
-    response = client.get(
-        f"/strava/authorize?code={code}", cookies={"session_id": session_id}
-    )
+    client.cookies.set("session_id", session_id)
+    response = client.get(f"/strava/authorize?code={code}")
+    client.cookies.clear()
 
     assert response.status_code == 200
     assert response.json() == {"message": code}
@@ -37,9 +37,12 @@ def test_authorize(mock_strava_service):
 def test_athlete(mock_strava_service):
     mock_athlete = {"id": 123, "firstname": "Gonzalo"}
     mock_strava_service.get_athlete.return_value = mock_athlete
+    session_id = "test_session_id"
 
+    client.cookies.set("session_id", session_id)
     response = client.get("/strava/athlete")
+    client.cookies.clear()
 
     assert response.status_code == 200
     assert response.json() == mock_athlete
-    mock_strava_service.get_athlete.assert_called_once()
+    mock_strava_service.get_athlete.assert_called_once_with(session_id)

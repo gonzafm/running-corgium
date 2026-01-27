@@ -7,6 +7,13 @@ class Settings(BaseSettings):
     strava_redirect_uri: str = "http://localhost:5173/auth/callback"
     environment: str = "dev"
 
+    # Database settings
+    db_host: str = "127.0.0.1"
+    db_port: int = 5432
+    db_user: str = "rc-admin"
+    db_password: str = "password"
+    db_name: str = "postgres"
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 

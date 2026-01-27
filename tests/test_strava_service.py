@@ -1,11 +1,11 @@
 import unittest
-from unittest.mock import patch, MagicMock
-from datetime import datetime, timedelta
+from unittest.mock import patch, MagicMock, AsyncMock
+from datetime import datetime, timezone
 from src.strava.strava_client import StravaService
 from src.config import settings
 
 
-class TestStravaService(unittest.TestCase):
+class TestStravaService(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.patcher = patch("src.strava.strava_client.Client")
         self.MockClient = self.patcher.start()
@@ -61,58 +61,152 @@ class TestStravaService(unittest.TestCase):
 
         self.assertIn("No token found", str(context.exception))
 
-    def test_list_activities_returns_list(self):
+    async def test_list_activities_returns_all_from_database(self):
         session_id = "test-session-123"
         self.service.tokens[session_id] = "mock_token"
+
+        # Create mock SummaryActivity objects
+        mock_activity1 = MagicMock()
+        mock_activity1.id = 111
+        mock_activity1.name = "Morning Run"
+        mock_activity2 = MagicMock()
+        mock_activity2.id = 222
+        mock_activity2.name = "Evening Walk"
+
+        self.service.postgres_service = MagicMock()
+        self.service.postgres_service.get_last_sync_date.return_value = datetime(
+            2024, 1, 10, tzinfo=timezone.utc
+        )
+        self.service.postgres_service.is_activity_synced.return_value = True
+        self.service.postgres_service.get_activities = AsyncMock(
+            return_value=[mock_activity1, mock_activity2]
+        )
+
+        # No new activities from Strava
+        self.service.client.get_activities.return_value = []
+
+        result = await self.service.list_activities(session_id)
+
+        # Should return activities from database
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0].name, "Morning Run")
+        self.assertEqual(result[1].name, "Evening Walk")
+        self.service.postgres_service.get_activities.assert_called_once_with(limit=100)
+
+    async def test_list_activities_syncs_new_activities_first(self):
+        session_id = "test-session-123"
+        self.service.tokens[session_id] = "mock_token"
+        last_sync = datetime(2024, 1, 10, 0, 0, 0, tzinfo=timezone.utc)
+
+        self.service.postgres_service = MagicMock()
+        self.service.postgres_service.get_last_sync_date.return_value = last_sync
+        self.service.postgres_service.is_activity_synced.return_value = False
+        self.service.postgres_service.insert_activity = AsyncMock(return_value=True)
+        self.service.postgres_service.get_activities = AsyncMock(return_value=[])
 
         mock_activity = MagicMock()
         mock_activity.id = 12345
         mock_activity.name = "Morning Run"
-        mock_activity.distance = 5000.0
-        mock_activity.moving_time = timedelta(minutes=30)
-        mock_activity.elapsed_time = timedelta(minutes=32)
-        mock_activity.total_elevation_gain = 50.0
-        mock_activity.type = "Run"
-        mock_activity.start_date = datetime(2024, 1, 15, 8, 0, 0)
-        mock_activity.start_date_local = datetime(2024, 1, 15, 9, 0, 0)
-        mock_activity.timezone = "Europe/Madrid"
-
         self.service.client.get_activities.return_value = [mock_activity]
 
-        result = self.service.list_activities(session_id)
+        await self.service.list_activities(session_id)
 
-        self.assertIsInstance(result, list)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]["id"], 12345)
-        self.assertEqual(result[0]["name"], "Morning Run")
-        self.assertEqual(result[0]["distance"], 5000.0)
-        self.assertEqual(result[0]["moving_time"], timedelta(minutes=30))
-        self.assertEqual(result[0]["type"], "Run")
-        self.service.client.get_activities.assert_called_once_with(limit=10)
+        # Should fetch from Strava using after parameter
+        self.service.client.get_activities.assert_called_once_with(after=last_sync)
+        # Should insert the new activity
+        self.service.postgres_service.insert_activity.assert_called_once_with(
+            mock_activity
+        )
 
-    def test_list_activities_no_session_raises_error(self):
+    async def test_list_activities_skips_already_synced(self):
+        session_id = "test-session-123"
+        self.service.tokens[session_id] = "mock_token"
+
+        self.service.postgres_service = MagicMock()
+        self.service.postgres_service.get_last_sync_date.return_value = None
+        self.service.postgres_service.is_activity_synced.return_value = True
+        self.service.postgres_service.insert_activity = AsyncMock()
+        self.service.postgres_service.get_activities = AsyncMock(return_value=[])
+
+        mock_activity = MagicMock()
+        mock_activity.id = 12345
+        mock_activity.name = "Already Synced Run"
+        self.service.client.get_activities.return_value = [mock_activity]
+
+        await self.service.list_activities(session_id)
+
+        # Should not insert already synced activities
+        self.service.postgres_service.insert_activity.assert_not_called()
+
+    async def test_list_activities_no_sync_date_fetches_recent(self):
+        session_id = "test-session-123"
+        self.service.tokens[session_id] = "mock_token"
+
+        self.service.postgres_service = MagicMock()
+        self.service.postgres_service.get_last_sync_date.return_value = None
+        self.service.postgres_service.is_activity_synced.return_value = False
+        self.service.postgres_service.insert_activity = AsyncMock(return_value=True)
+        self.service.postgres_service.get_activities = AsyncMock(return_value=[])
+
+        self.service.client.get_activities.return_value = []
+
+        await self.service.list_activities(session_id)
+
+        # Should fetch with limit when no sync date
+        self.service.client.get_activities.assert_called_once_with(limit=50)
+
+    async def test_list_activities_no_session_raises_error(self):
         with self.assertRaises(ValueError) as context:
-            self.service.list_activities("invalid-session")
+            await self.service.list_activities("invalid-session")
 
         self.assertIn("No token found", str(context.exception))
 
-    def test_list_activities_sets_token_on_client(self):
+    async def test_list_activities_sets_token_on_client(self):
         session_id = "test-session-123"
         self.service.tokens[session_id] = "mock_token"
+        self.service.postgres_service = MagicMock()
+        self.service.postgres_service.get_last_sync_date.return_value = None
+        self.service.postgres_service.is_activity_synced.return_value = False
+        self.service.postgres_service.get_activities = AsyncMock(return_value=[])
         self.service.client.get_activities.return_value = []
 
-        self.service.list_activities(session_id)
+        await self.service.list_activities(session_id)
 
         self.assertEqual(self.service.client.access_token, "mock_token")
 
-    def test_list_activities_with_custom_limit(self):
+    async def test_list_activities_with_custom_limit(self):
         session_id = "test-session-123"
         self.service.tokens[session_id] = "mock_token"
+        self.service.postgres_service = MagicMock()
+        self.service.postgres_service.get_last_sync_date.return_value = None
+        self.service.postgres_service.is_activity_synced.return_value = False
+        self.service.postgres_service.get_activities = AsyncMock(return_value=[])
         self.service.client.get_activities.return_value = []
 
-        self.service.list_activities(session_id, limit=5)
+        await self.service.list_activities(session_id, limit=5)
 
-        self.service.client.get_activities.assert_called_once_with(limit=5)
+        # Custom limit applies to DB fetch
+        self.service.postgres_service.get_activities.assert_called_once_with(limit=5)
+
+    async def test_list_activities_db_failure_raises_error(self):
+        session_id = "test-session-123"
+        self.service.tokens[session_id] = "mock_token"
+        self.service.postgres_service = MagicMock()
+        self.service.postgres_service.get_last_sync_date.return_value = None
+        self.service.postgres_service.is_activity_synced.return_value = False
+        self.service.postgres_service.insert_activity = AsyncMock(
+            side_effect=Exception("Database connection failed")
+        )
+
+        mock_activity = MagicMock()
+        mock_activity.id = 12345
+        mock_activity.name = "Morning Run"
+        self.service.client.get_activities.return_value = [mock_activity]
+
+        with self.assertRaises(Exception) as context:
+            await self.service.list_activities(session_id)
+
+        self.assertIn("Database connection failed", str(context.exception))
 
 
 if __name__ == "__main__":
