@@ -28,8 +28,10 @@ testpaths = ["tests"]
 
 [dependency-groups]
 dev = [
+    "bandit>=1.8.0",
     "mypy>=1.19.1",
     "pre-commit>=4.5.0",
+    "pytest-cov>=6.0.0",
     "ruff>=0.14.9",
     "safety>=3.7.0",
     "types-protobuf>=5.29.0",

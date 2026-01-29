@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from stravalib import Client
@@ -23,9 +24,10 @@ class StravaService:
         logging.info(f"Please authorize at {url}")
         return url
 
-    def authenticate_and_store(self, session_id: str, code: str) -> None:
+    async def authenticate_and_store(self, session_id: str, code: str) -> None:
         logging.info("Authenticating with Strava")
-        token_response = self.client.exchange_code_for_token(
+        token_response = await asyncio.to_thread(
+            self.client.exchange_code_for_token,
             client_id=settings.strava_client_id,
             client_secret=settings.strava_client_secret,
             code=code,
@@ -86,10 +88,16 @@ class StravaService:
 
         if last_sync_date:
             logging.info(f"Fetching activities from Strava after {last_sync_date}")
-            results = client.get_activities(after=last_sync_date)
+            # Run sync Strava API call in thread to avoid blocking event loop
+            results = await asyncio.to_thread(
+                lambda: list(client.get_activities(after=last_sync_date))
+            )
         else:
             logging.info("No sync date found, fetching recent activities from Strava")
-            results = client.get_activities(limit=50)
+            # Run sync Strava API call in thread to avoid blocking event loop
+            results = await asyncio.to_thread(
+                lambda: list(client.get_activities(limit=50))
+            )
 
         new_count = 0
         for activity in results:
@@ -113,7 +121,7 @@ class StravaService:
         logging.info(f"Sync complete: {new_count} new activities synced from Strava")
         return new_count
 
-    def get_athlete(self, session_id: str):
+    async def get_athlete(self, session_id: str):
         """Fetch athlete data for a session."""
         client = self._get_client_for_session(session_id)
-        return client.get_athlete()
+        return await asyncio.to_thread(client.get_athlete)

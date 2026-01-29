@@ -13,23 +13,29 @@ class PostgresService:
         self._last_sync_date: datetime | None = None
         self._initialized: bool = False
         self._synced_ids: set[int] = set()
+        self._pool: asyncpg.Pool | None = None
 
-    async def _get_connection(self) -> asyncpg.Connection:
-        return await asyncpg.connect(
-            host=settings.db_host,
-            port=settings.db_port,
-            user=settings.db_user,
-            password=settings.db_password,
-            database=settings.db_name,
-        )
+    async def _ensure_pool(self) -> asyncpg.Pool:
+        """Ensure connection pool exists, creating it if needed."""
+        if self._pool is None:
+            self._pool = await asyncpg.create_pool(
+                host=settings.db_host,
+                port=settings.db_port,
+                user=settings.db_user,
+                password=settings.db_password,
+                database=settings.db_name,
+                min_size=2,
+                max_size=10,
+            )
+        return self._pool
 
     async def initialize(self) -> None:
         """Initialize sync state from database. Should be called at startup."""
         if self._initialized:
             return
         logging.info("Initializing PostgresService from database")
-        conn = await self._get_connection()
-        try:
+        pool = await self._ensure_pool()
+        async with pool.acquire() as conn:
             # Get the most recent activity date from DB
             row = await conn.fetchrow(
                 "SELECT MAX(create_date) as last_date FROM running_corgium.activities"
@@ -52,8 +58,6 @@ class PostgresService:
             logging.info(f"Loaded {len(self._synced_ids)} existing activity IDs")
 
             self._initialized = True
-        finally:
-            await conn.close()
 
     def get_last_sync_date(self) -> datetime | None:
         """Get the date up to which activities have been synchronized."""
@@ -66,8 +70,8 @@ class PostgresService:
     async def get_activities(self, limit: int = 100) -> list[SummaryActivity]:
         """Get activities from the database as Pydantic models."""
         logging.info(f"Fetching up to {limit} activities from database")
-        conn = await self._get_connection()
-        try:
+        pool = await self._ensure_pool()
+        async with pool.acquire() as conn:
             rows = await conn.fetch(
                 """SELECT strava_id, strava_response, create_date
                    FROM running_corgium.activities
@@ -88,8 +92,6 @@ class PostgresService:
 
             logging.info(f"Returning {len(activities)} parsed activities")
             return activities
-        finally:
-            await conn.close()
 
     async def insert_activity(self, activity: SummaryActivity) -> bool:
         """Insert a new activity into the database."""
@@ -104,8 +106,8 @@ class PostgresService:
             return False
 
         logging.info(f"Inserting activity {activity.id} into database")
-        conn = await self._get_connection()
-        try:
+        pool = await self._ensure_pool()
+        async with pool.acquire() as conn:
             await conn.execute(
                 "INSERT INTO running_corgium.activities(create_date,strava_response,strava_id) VALUES ($1, $2,$3)",
                 activity.start_date,
@@ -123,5 +125,10 @@ class PostgresService:
 
             logging.info(f"Activity {activity.id} inserted successfully")
             return True
-        finally:
-            await conn.close()
+
+    async def close(self) -> None:
+        """Close the connection pool. Should be called at shutdown."""
+        if self._pool is not None:
+            await self._pool.close()
+            self._pool = None
+            logging.info("PostgresService connection pool closed")

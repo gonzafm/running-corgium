@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 
 from fastapi.testclient import TestClient
 
@@ -23,6 +23,8 @@ def test_login_redirect(mock_strava_service):
 def test_authorize(mock_strava_service):
     code = "test_code"
     session_id = "test_session_id"
+    # authenticate_and_store is now async
+    mock_strava_service.authenticate_and_store = AsyncMock()
 
     client.cookies.set("session_id", session_id)
     response = client.get(f"/strava/authorize?code={code}")
@@ -36,7 +38,8 @@ def test_authorize(mock_strava_service):
 @patch("src.main.strava_service")
 def test_athlete(mock_strava_service):
     mock_athlete = {"id": 123, "firstname": "Gonzalo"}
-    mock_strava_service.get_athlete.return_value = mock_athlete
+    # get_athlete is now async
+    mock_strava_service.get_athlete = AsyncMock(return_value=mock_athlete)
     session_id = "test_session_id"
 
     client.cookies.set("session_id", session_id)

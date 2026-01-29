@@ -54,6 +54,11 @@ test-backend:
     @echo "Running Python tests..."
     uv run pytest tests
 
+# Run Python tests with coverage
+test-cov:
+    @echo "Running Python tests with coverage..."
+    uv run pytest tests --cov=src --cov-report=term-missing --cov-report=html
+
 # Run frontend tests
 test-frontend:
     @echo "Running frontend tests..."
@@ -76,6 +81,13 @@ lint-backend:
 lint-frontend:
     @echo "Linting frontend..."
     cd frontend && bun run lint
+
+# Run ruff + bandit security scan
+lint-security:
+    @echo "Running ruff..."
+    uv run ruff check .
+    @echo "Running bandit security scan..."
+    uv run bandit -r src/ -q
 
 # ============================================================================
 # Development Servers
