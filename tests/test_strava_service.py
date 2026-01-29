@@ -26,7 +26,7 @@ class TestStravaService(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(url, expected_url)
 
-    def test_authenticate_and_store(self):
+    async def test_authenticate_and_store(self):
         session_id = "test-session-123"
         mock_code = "mock_code"
         expected_token = "mock_access_token"
@@ -34,7 +34,7 @@ class TestStravaService(unittest.IsolatedAsyncioTestCase):
             "access_token": expected_token
         }
 
-        self.service.authenticate_and_store(session_id, mock_code)
+        await self.service.authenticate_and_store(session_id, mock_code)
 
         self.service.client.exchange_code_for_token.assert_called_once_with(
             client_id=settings.strava_client_id,
@@ -43,21 +43,21 @@ class TestStravaService(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(self.service.tokens[session_id], expected_token)
 
-    def test_get_athlete(self):
+    async def test_get_athlete(self):
         session_id = "test-session-123"
         self.service.tokens[session_id] = "mock_token"
         mock_athlete = {"name": "Gonzalo"}
         self.service.client.get_athlete.return_value = mock_athlete
 
-        result = self.service.get_athlete(session_id)
+        result = await self.service.get_athlete(session_id)
 
         self.service.client.get_athlete.assert_called_once()
         self.assertEqual(result, mock_athlete)
         self.assertEqual(self.service.client.access_token, "mock_token")
 
-    def test_get_athlete_no_session_raises_error(self):
+    async def test_get_athlete_no_session_raises_error(self):
         with self.assertRaises(ValueError) as context:
-            self.service.get_athlete("invalid-session")
+            await self.service.get_athlete("invalid-session")
 
         self.assertIn("No token found", str(context.exception))
 

@@ -18,6 +18,7 @@ strava_service = StravaService()
 async def lifespan(app: FastAPI):
     await strava_service.postgres_service.initialize()
     yield
+    await strava_service.postgres_service.close()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -39,7 +40,7 @@ async def login_user(name: str):
 async def authorize(code: str, session_id: str = Cookie(None)):
     logging.info(f"Strava called back with code: {code}")
     try:
-        strava_service.authenticate_and_store(session_id, code)
+        await strava_service.authenticate_and_store(session_id, code)
         logging.info(f"Authorization successful for session {session_id}.")
         return {"message": code}
     except Exception as e:
@@ -52,7 +53,7 @@ async def athlete(session_id: str = Cookie(None)):
     if not session_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
-        return strava_service.get_athlete(session_id)
+        return await strava_service.get_athlete(session_id)
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
 
