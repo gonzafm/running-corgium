@@ -38,17 +38,17 @@ describe('Strava Integration (Real Backend)', () => {
     expect(response.headers.get('location')).toContain('strava.com');
   });
 
-  it('GET /strava/authorize should return code in message', async () => {
+  it('GET /strava/authorize with invalid code should return 400', async () => {
     if (!backendAvailable) {
       console.log('Skipping: backend not available');
       return;
     }
 
-    const response = await fetch(`${BACKEND_URL}/strava/authorize?code=integration_test_code`);
+    const response = await fetch(`${BACKEND_URL}/strava/authorize?code=invalid_code`);
     const data = await response.json();
 
-    expect(response.status).toBe(200);
-    expect(data.message).toBe('integration_test_code');
+    expect(response.status).toBe(400);
+    expect(data.detail).toBeDefined();
   });
 
   it('GET /strava/athlete should return JSON response', async () => {

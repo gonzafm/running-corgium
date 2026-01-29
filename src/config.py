@@ -1,3 +1,4 @@
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -6,6 +7,10 @@ class Settings(BaseSettings):
     strava_client_secret: str
     strava_redirect_uri: str = "http://localhost:5173/auth/callback"
     environment: str = "dev"
+
+    # JWT settings
+    jwt_secret: SecretStr
+    jwt_lifetime_seconds: int = 3600
 
     # Database settings
     db_host: str = "127.0.0.1"

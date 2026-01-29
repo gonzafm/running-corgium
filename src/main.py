@@ -1,10 +1,15 @@
-from contextlib import asynccontextmanager
-
-from fastapi import FastAPI, HTTPException, Cookie
-from fastapi.responses import RedirectResponse
-from src.strava import StravaService
 import logging
 import uuid
+from contextlib import asynccontextmanager
+
+from fastapi import Cookie, Depends, FastAPI, HTTPException
+from fastapi.responses import RedirectResponse
+
+from src.auth import auth_backend, current_active_user, fastapi_users
+from src.auth.schemas import UserCreate, UserRead, UserUpdate
+from src.database.db import create_db_and_tables
+from src.database.models import User
+from src.strava import StravaService
 
 # Configure logging
 logging.basicConfig(
@@ -16,12 +21,45 @@ strava_service = StravaService()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await create_db_and_tables()
     await strava_service.postgres_service.initialize()
     yield
     await strava_service.postgres_service.close()
 
 
 app = FastAPI(lifespan=lifespan)
+
+# --- Auth routers ---
+app.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix="/auth/jwt",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix="/auth",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users.get_reset_password_router(),
+    prefix="/auth",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users.get_verify_router(UserRead),
+    prefix="/auth",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users.get_users_router(UserRead, UserUpdate),
+    prefix="/users",
+    tags=["users"],
+)
+
+
+@app.get("/authenticated-route")
+async def authenticated_route(user: User = Depends(current_active_user)):
+    return {"message": f"Hello {user.email}!"}
 
 
 @app.get("/login/{name}")

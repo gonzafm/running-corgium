@@ -6,6 +6,7 @@
 ## Tech Stack
 - **Language:** Python 3.14+ (using `uv` for package management)
 - **Web Framework:** FastAPI (for REST/HTTP)
+- **Security:** fastapi-users with SQLAlchemy (for authentication) + jwt (for authorization)
 - **Communication:** gRPC (Protobuf definitions in `/protos`) and REST
 - **Third-party APIs:** Strava API via `stravalib`
 - **Quality Tools:** Ruff (linting), Mypy (types), Pytest (testing)
