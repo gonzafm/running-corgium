@@ -66,7 +66,8 @@ class PostgresService:
             activities: list[SummaryActivity] = []
             for row in rows:
                 try:
-                    activity = SummaryActivity.model_validate_json(row.strava_response)
+                    logging.debug(f"Parsing activity {type(row.strava_response)} {row.strava_response}")
+                    activity = SummaryActivity.model_validate(row.strava_response)
                     activities.append(activity)
                     logging.debug(f"Parsed activity {row.strava_id}: {activity.name}")
                 except ValidationError as e:

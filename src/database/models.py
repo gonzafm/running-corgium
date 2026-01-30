@@ -2,6 +2,7 @@ from datetime import datetime
 
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
 from sqlalchemy import DateTime, Integer, String, Text, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -29,4 +30,4 @@ class Activity(Base):
 
     strava_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     create_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    strava_response: Mapped[str] = mapped_column(Text)
+    strava_response: Mapped[str] = mapped_column(JSONB)
