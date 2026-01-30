@@ -28,7 +28,7 @@ export function OAuthCallback() {
         const response = await stravaApi.authorize(code);
         console.log('Strava authorization response:', response.message);
         setStatus('success');
-        setTimeout(() => navigate('/athlete'), 1500);
+        setTimeout(() => navigate('/dashboard'), 1500);
       } catch (err) {
         console.error('Authorization failed:', err);
         setStatus('error');
@@ -66,7 +66,7 @@ export function OAuthCallback() {
   return (
     <div className="text-center p-8">
       <h2 className="mb-4">Success!</h2>
-      <p>Redirecting to athlete profile...</p>
+      <p>Redirecting to dashboard...</p>
     </div>
   );
 }

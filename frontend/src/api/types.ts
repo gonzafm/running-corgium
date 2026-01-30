@@ -34,6 +34,23 @@ export interface Activity {
   timezone: string;
 }
 
+// Auth types
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+}
+
+export interface UserRead {
+  id: number;
+  email: string;
+  is_active: boolean;
+  is_superuser: boolean;
+  is_verified: boolean;
+  first_name?: string;
+  last_name?: string;
+  display_name?: string;
+}
+
 // Error response shape
 export interface ApiError {
   detail?: string;

@@ -1,8 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import { AthleteProfile } from '../components/AthleteProfile';
+import { useAuth } from '../context/AuthContext';
 
 export function AthletePage() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
@@ -16,7 +23,7 @@ export function AthletePage() {
             Dashboard
           </button>
           <button
-            onClick={() => navigate('/')}
+            onClick={handleLogout}
             className="py-2 px-4 rounded bg-gray-600 text-white hover:bg-gray-700 cursor-pointer"
           >
             Logout
