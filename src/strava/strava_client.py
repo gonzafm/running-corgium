@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from stravalib import Client
 from stravalib.model import SummaryActivity
 
@@ -11,9 +12,9 @@ from src.database.postgres_service import PostgresService
 class StravaService:
     tokens: dict[str, str] = {}
 
-    def __init__(self) -> None:
+    def __init__(self, session_maker: async_sessionmaker[AsyncSession]) -> None:
         self.client = Client()
-        self.postgres_service = PostgresService()
+        self.postgres_service = PostgresService(session_maker)
 
     def get_basic_info(self) -> str:
         logging.info("Getting basic info from Strava")

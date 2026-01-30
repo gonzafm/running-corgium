@@ -7,7 +7,7 @@ from fastapi.responses import RedirectResponse
 
 from src.auth import auth_backend, current_active_user, fastapi_users
 from src.auth.schemas import UserCreate, UserRead, UserUpdate
-from src.database.db import create_db_and_tables
+from src.database.db import async_session_maker, create_db_and_tables, engine
 from src.database.models import User
 from src.strava import StravaService
 
@@ -16,7 +16,7 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
-strava_service = StravaService()
+strava_service = StravaService(async_session_maker)
 
 
 @asynccontextmanager
@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
     await create_db_and_tables()
     await strava_service.postgres_service.initialize()
     yield
-    await strava_service.postgres_service.close()
+    await engine.dispose()
 
 
 app = FastAPI(lifespan=lifespan)
