@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { AthleteProfile } from '../components/AthleteProfile';
 import { LoginButton } from '../components/LoginButton';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useAthlete } from '../hooks/useAthlete';
 
 export function DashboardPage() {

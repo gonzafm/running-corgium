@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { AthleteProfile } from '../components/AthleteProfile';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 export function AthletePage() {
   const navigate = useNavigate();
