@@ -10,13 +10,18 @@ export function AthleteProfile() {
 
   useEffect(() => {
     const fetchAthlete = async () => {
+      console.log('[AthleteProfile] Fetching athlete and activities...');
       try {
         const data = await stravaApi.getAthlete();
+        console.log('[AthleteProfile] Athlete loaded:', data.firstname);
         const activityResponse = await stravaApi.getActivities();
+        console.log('[AthleteProfile] Activities loaded:', activityResponse.length);
         setAthlete(data);
         setActivities(activityResponse);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch athlete');
+        const message = err instanceof Error ? err.message : 'Failed to fetch athlete';
+        console.warn('[AthleteProfile] Error:', message);
+        setError(message);
       } finally {
         setLoading(false);
       }

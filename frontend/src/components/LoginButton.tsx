@@ -6,7 +6,9 @@ interface LoginButtonProps {
 
 export function LoginButton({ username }: LoginButtonProps) {
   const handleLogin = () => {
-    window.location.href = stravaApi.getLoginUrl(username);
+    const url = stravaApi.getLoginUrl(username);
+    console.log('[LoginButton] Redirecting to Strava OAuth:', url);
+    window.location.href = url;
   };
 
   return (

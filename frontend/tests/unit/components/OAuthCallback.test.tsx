@@ -57,11 +57,11 @@ describe('OAuthCallback - Strava Authorization Flow', () => {
       'strava_callback_code_123'
     );
 
-    expect(screen.getByText('Redirecting to athlete profile...')).toBeInTheDocument();
+    expect(screen.getByText('Redirecting to dashboard...')).toBeInTheDocument();
 
-    // Wait for navigation to athlete page
+    // Wait for navigation to dashboard page
     await waitFor(() => {
-      expect(screen.getByTestId('athlete-page')).toBeInTheDocument();
+      expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 
@@ -96,7 +96,7 @@ describe('OAuthCallback - Strava Authorization Flow', () => {
     });
   });
 
-  it('should complete full OAuth callback flow: receive -> log -> redirect to athlete', async () => {
+  it('should complete full OAuth callback flow: receive -> log -> redirect to dashboard', async () => {
     const stravaCode = 'complete_flow_test_code';
     renderWithRouter(`/auth/callback?code=${stravaCode}`);
 
@@ -114,10 +114,10 @@ describe('OAuthCallback - Strava Authorization Flow', () => {
       stravaCode
     );
 
-    // Step 4: Redirect to athlete page
+    // Step 4: Redirect to dashboard page
     await waitFor(() => {
-      expect(screen.getByTestId('athlete-page')).toBeInTheDocument();
-      expect(screen.getByText('Athlete Profile')).toBeInTheDocument();
+      expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+      expect(screen.getByText('Dashboard')).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 });
