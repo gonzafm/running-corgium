@@ -9,7 +9,8 @@ class TestStravaService(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.patcher = patch("src.strava.strava_client.Client")
         self.MockClient = self.patcher.start()
-        self.service = StravaService()
+        self.mock_session_maker = AsyncMock()
+        self.service = StravaService(self.mock_session_maker)
 
     def tearDown(self):
         self.patcher.stop()

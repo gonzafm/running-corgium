@@ -1,60 +1,44 @@
-import asyncpg
 import logging
 from datetime import datetime, timedelta, timezone
 
 from pydantic import ValidationError
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from stravalib.model import SummaryActivity
 
-from src.config import settings
+from src.database.models import Activity
 
 
 class PostgresService:
-    def __init__(self) -> None:
+    def __init__(self, session_maker: async_sessionmaker[AsyncSession]) -> None:
+        self._session_maker = session_maker
         self._last_sync_date: datetime | None = None
         self._initialized: bool = False
         self._synced_ids: set[int] = set()
-        self._pool: asyncpg.Pool | None = None
-
-    async def _ensure_pool(self) -> asyncpg.Pool:
-        """Ensure connection pool exists, creating it if needed."""
-        if self._pool is None:
-            self._pool = await asyncpg.create_pool(
-                host=settings.db_host,
-                port=settings.db_port,
-                user=settings.db_user,
-                password=settings.db_password,
-                database=settings.db_name,
-                min_size=2,
-                max_size=10,
-            )
-        return self._pool
 
     async def initialize(self) -> None:
         """Initialize sync state from database. Should be called at startup."""
         if self._initialized:
             return
         logging.info("Initializing PostgresService from database")
-        pool = await self._ensure_pool()
-        async with pool.acquire() as conn:
+        async with self._session_maker() as session:
             # Get the most recent activity date from DB
-            row = await conn.fetchrow(
-                "SELECT MAX(create_date) as last_date FROM running_corgium.activities"
+            result = await session.execute(
+                select(func.max(Activity.create_date))
             )
-            if row and row["last_date"]:
-                self._last_sync_date = row["last_date"]
+            last_date = result.scalar_one_or_none()
+            if last_date:
+                self._last_sync_date = last_date
                 logging.info(f"Last sync date from DB: {self._last_sync_date}")
             else:
-                # No activities in DB, assume everything until yesterday is synced
                 self._last_sync_date = datetime.now(timezone.utc) - timedelta(days=1)
                 logging.info(
                     f"No activities in DB, assuming synced until: {self._last_sync_date}"
                 )
 
             # Load existing activity IDs to avoid duplicates
-            rows = await conn.fetch(
-                "SELECT strava_id FROM running_corgium.activities"
-            )
-            self._synced_ids = {row["strava_id"] for row in rows}
+            result = await session.execute(select(Activity.strava_id))
+            self._synced_ids = {row[0] for row in result.all()}
             logging.info(f"Loaded {len(self._synced_ids)} existing activity IDs")
 
             self._initialized = True
@@ -70,25 +54,23 @@ class PostgresService:
     async def get_activities(self, limit: int = 100) -> list[SummaryActivity]:
         """Get activities from the database as Pydantic models."""
         logging.info(f"Fetching up to {limit} activities from database")
-        pool = await self._ensure_pool()
-        async with pool.acquire() as conn:
-            rows = await conn.fetch(
-                """SELECT strava_id, strava_response, create_date
-                   FROM running_corgium.activities
-                   ORDER BY create_date DESC
-                   LIMIT $1""",
-                limit,
+        async with self._session_maker() as session:
+            result = await session.execute(
+                select(Activity)
+                .order_by(Activity.create_date.desc())
+                .limit(limit)
             )
+            rows = result.scalars().all()
             logging.info(f"Found {len(rows)} activities in database")
 
             activities: list[SummaryActivity] = []
             for row in rows:
                 try:
-                    activity = SummaryActivity.model_validate_json(row["strava_response"])
+                    activity = SummaryActivity.model_validate_json(row.strava_response)
                     activities.append(activity)
-                    logging.debug(f"Parsed activity {row['strava_id']}: {activity.name}")
+                    logging.debug(f"Parsed activity {row.strava_id}: {activity.name}")
                 except ValidationError as e:
-                    logging.error(f"Failed to parse activity {row['strava_id']}: {e}")
+                    logging.error(f"Failed to parse activity {row.strava_id}: {e}")
 
             logging.info(f"Returning {len(activities)} parsed activities")
             return activities
@@ -106,14 +88,14 @@ class PostgresService:
             return False
 
         logging.info(f"Inserting activity {activity.id} into database")
-        pool = await self._ensure_pool()
-        async with pool.acquire() as conn:
-            await conn.execute(
-                "INSERT INTO running_corgium.activities(create_date,strava_response,strava_id) VALUES ($1, $2,$3)",
-                activity.start_date,
-                activity.model_dump_json(),
-                activity.id,
+        async with self._session_maker() as session:
+            db_activity = Activity(
+                strava_id=activity.id,
+                create_date=activity.start_date,
+                strava_response=activity.model_dump_json(),
             )
+            session.add(db_activity)
+            await session.commit()
             self._synced_ids.add(activity.id)
 
             # Update last sync date if this activity is newer
@@ -125,10 +107,3 @@ class PostgresService:
 
             logging.info(f"Activity {activity.id} inserted successfully")
             return True
-
-    async def close(self) -> None:
-        """Close the connection pool. Should be called at shutdown."""
-        if self._pool is not None:
-            await self._pool.close()
-            self._pool = None
-            logging.info("PostgresService connection pool closed")
