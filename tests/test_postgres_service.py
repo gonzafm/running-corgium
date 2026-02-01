@@ -127,11 +127,11 @@ class TestPostgresService(unittest.IsolatedAsyncioTestCase):
 
         mock_row1 = MagicMock()
         mock_row1.strava_id = 111
-        mock_row1.strava_response = '{"id": 111, "name": "Morning Run", "distance": 5000, "type": "Run"}'
+        mock_row1.strava_response = {"id": 111, "name": "Morning Run", "distance": 5000, "type": "Run"}
 
         mock_row2 = MagicMock()
         mock_row2.strava_id = 222
-        mock_row2.strava_response = '{"id": 222, "name": "Evening Walk", "distance": 2000, "type": "Walk"}'
+        mock_row2.strava_response = {"id": 222, "name": "Evening Walk", "distance": 2000, "type": "Walk"}
 
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = [mock_row1, mock_row2]

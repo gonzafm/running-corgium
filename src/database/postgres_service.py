@@ -6,10 +6,11 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from stravalib.model import SummaryActivity
 
+from src.database.activity_repository import ActivityRepository
 from src.database.models import Activity
 
 
-class PostgresService:
+class PostgresService(ActivityRepository):
     def __init__(self, session_maker: async_sessionmaker[AsyncSession]) -> None:
         self._session_maker = session_maker
         self._last_sync_date: datetime | None = None

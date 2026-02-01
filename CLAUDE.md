@@ -1,7 +1,8 @@
 # CLAUDE.md - Project Context & Instructions
 
 ## Project Overview
-**running-corgium** is a Python-based service that integrates Strava data via FastAPI and gRPC. It serves as a bridge between fitness activities and other internal services.
+**running-corgium** is a Python-based service that integrates Strava data via FastAPI. It serves as a bridge between fitness activities and other internal services.
+
 
 ## Tech Stack
 - **Language:** Python 3.14+ (using `uv` for package management)
@@ -10,7 +11,7 @@
 - **Communication:** gRPC (Protobuf definitions in `/protos`) and REST
 - **Third-party APIs:** Strava API via `stravalib`
 - **Quality Tools:** Ruff (linting), Mypy (types), Pytest (testing)
-- **Database:** Postgres via asyncpg
+- **Database:** Postgres via asyncpg or DynamoDB
 
 ## Functional Requirements
 

@@ -7,7 +7,8 @@ from fastapi.responses import RedirectResponse
 
 from src.auth import auth_backend, current_active_user, fastapi_users
 from src.auth.schemas import UserCreate, UserRead, UserUpdate
-from src.database.db import async_session_maker, create_db_and_tables, engine
+from src.config import settings
+from src.database.activity_repository import ActivityRepository
 from src.database.models import User
 from src.strava import StravaService
 
@@ -16,15 +17,52 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
-strava_service = StravaService(async_session_maker)
+
+def _create_activity_repo() -> ActivityRepository:
+    if settings.db_backend == "dynamodb":
+        import boto3
+
+        from src.database.dynamo_service import DynamoService
+
+        dynamodb = boto3.resource(
+            "dynamodb",
+            endpoint_url=settings.dynamodb_endpoint_url,
+            region_name=settings.dynamodb_region,
+        )
+        return DynamoService(dynamodb.Table(settings.dynamodb_table_name))
+
+    from src.database import PostgresService
+    from src.database.db import async_session_maker
+
+    return PostgresService(async_session_maker)
+
+
+activity_repo = _create_activity_repo()
+strava_service = StravaService(activity_repo)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await create_db_and_tables()
-    await strava_service.postgres_service.initialize()
+    if settings.db_backend == "dynamodb":
+        from src.database.dynamo_service import ensure_dynamo_table
+
+        await ensure_dynamo_table(
+            settings.dynamodb_endpoint_url,
+            settings.dynamodb_region,
+            settings.dynamodb_table_name,
+        )
+    else:
+        from src.database.db import create_db_and_tables
+
+        await create_db_and_tables()
+
+    await activity_repo.initialize()
     yield
-    await engine.dispose()
+
+    if settings.db_backend == "postgres":
+        from src.database.db import engine
+
+        await engine.dispose()
 
 
 app = FastAPI(lifespan=lifespan)

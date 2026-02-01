@@ -93,17 +93,25 @@ lint-security:
 # Development Servers
 # ============================================================================
 
-# Run both servers (backend + frontend)
-dev:
-    @echo "Starting both servers..."
+# Run with Postgres backend (backend + frontend)
+dev-postgres:
+    @echo "Starting with Postgres backend..."
     @echo "Backend: http://localhost:8000"
     @echo "Frontend: http://localhost:5173"
     @echo ""
-    just dev-backend & just dev-frontend & wait
+    just _dev-backend "postgres" & just dev-frontend & wait
 
-# Run FastAPI server (port 8000)
-dev-backend:
-    uv run uvicorn src.main:app --reload --port 8000
+# Run with DynamoDB backend (backend + frontend)
+dev-dynamodb:
+    @echo "Starting with DynamoDB backend..."
+    @echo "Backend: http://localhost:8000"
+    @echo "Frontend: http://localhost:5173"
+    @echo ""
+    just _dev-backend "dynamodb" & just dev-frontend & wait
+
+# Run FastAPI server with the given backend
+_dev-backend backend:
+    DB_BACKEND={{backend}} uv run uvicorn src.main:app --reload --port 8000
 
 # Run Vite dev server (port 5173)
 dev-frontend:
