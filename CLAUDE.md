@@ -3,6 +3,11 @@
 ## Project Overview
 **running-corgium** is a Python-based service that integrates Strava data via FastAPI. It serves as a bridge between fitness activities and other internal services.
 
+## Profiles
+The application handles two deploy types:
+- `standalone`: A standalone deploy that uses PostgresSQL for persistence. It is also the user database
+- `aws`: A serverless deploy that uses DynamoDB for persistence and cognito for authentication.
+Parity of both approaches is desirable.
 
 ## Tech Stack
 - **Language:** Python 3.14+ (using `uv` for package management)

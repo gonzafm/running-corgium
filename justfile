@@ -94,20 +94,20 @@ lint-security:
 # ============================================================================
 
 # Run with Postgres backend (backend + frontend)
-dev-postgres:
+dev-standalone:
     @echo "Starting with Postgres backend..."
     @echo "Backend: http://localhost:8000"
     @echo "Frontend: http://localhost:5173"
     @echo ""
-    just _dev-backend "postgres" & just dev-frontend & wait
+    just _dev-backend "standalone" & just dev-frontend & wait
 
 # Run with DynamoDB backend (backend + frontend)
-dev-dynamodb:
+dev-aws:
     @echo "Starting with DynamoDB backend..."
     @echo "Backend: http://localhost:8000"
     @echo "Frontend: http://localhost:5173"
     @echo ""
-    just _dev-backend "dynamodb" & just dev-frontend & wait
+    just _dev-backend "aws" & just dev-frontend & wait
 
 # Run FastAPI server with the given backend
 _dev-backend backend:
