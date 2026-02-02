@@ -3,6 +3,25 @@ revision = 3
 requires-python = ">=3.14"
 
 [[package]]
+name = "aiokafka"
+version = "0.13.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "async-timeout" },
+    { name = "packaging" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/87/18/d3a4f8f9ad099fc59217b8cdf66eeecde3a9ef3bb31fe676e431a3b0010f/aiokafka-0.13.0.tar.gz", hash = "sha256:7d634af3c8d694a37a6c8535c54f01a740e74cccf7cc189ecc4a3d64e31ce122", size = 598580, upload-time = "2026-01-02T13:55:18.911Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3c/cc/45b04c3a5fd3d2d5f444889ecceb80b2f78d6d66aa45e3042767e55579e2/aiokafka-0.13.0-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:9a403785f7092c72906c37f7618f7b16a4219eba8ed0bdda90fba410a7dd50b5", size = 344503, upload-time = "2026-01-02T13:55:08.723Z" },
+    { url = "https://files.pythonhosted.org/packages/76/df/0b76fe3b93558ae71b856940e384909c4c2c7a1c330423003191e4ba7782/aiokafka-0.13.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:256807326831b7eee253ea1017bd2b19ab1c2298ce6b20a87fde97c253c572bc", size = 347621, upload-time = "2026-01-02T13:55:10.147Z" },
+    { url = "https://files.pythonhosted.org/packages/34/1a/d59932f98fd3c106e2a7c8d4d5ebd8df25403436dfc27b3031918a37385e/aiokafka-0.13.0-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:64d90f91291da265d7f25296ba68fc6275684eebd6d1cf05a1b2abe6c2ba3543", size = 1111410, upload-time = "2026-01-02T13:55:11.763Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/04/fbf3e34ab3bc21e6e760c3fcd089375052fccc04eb8745459a82a58a647b/aiokafka-0.13.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b5a33cc043c8d199bcf101359d86f2d31fd54f4b157ac12028bdc34e3e1cf74a", size = 1094799, upload-time = "2026-01-02T13:55:13.795Z" },
+    { url = "https://files.pythonhosted.org/packages/85/10/509f709fd3b7c3e568a5b8044be0e80a1504f8da6ddc72c128b21e270913/aiokafka-0.13.0-cp314-cp314-win32.whl", hash = "sha256:538950384b539ba2333d35a853f09214c0409e818e5d5f366ef759eea50bae9c", size = 311553, upload-time = "2026-01-02T13:55:15.928Z" },
+    { url = "https://files.pythonhosted.org/packages/2b/18/424d6a4eb6f4835a371c1e2cfafce800540b33d957c6638795d911f98973/aiokafka-0.13.0-cp314-cp314-win_amd64.whl", hash = "sha256:c906dd42daadd14b4506a2e6c62dfef3d4919b5953d32ae5e5f0d99efd103c89", size = 330648, upload-time = "2026-01-02T13:55:17.421Z" },
+]
+
+[[package]]
 name = "annotated-doc"
 version = "0.0.4"
 source = { registry = "https://pypi.org/simple" }
@@ -89,6 +108,15 @@ wheels = [
 ]
 
 [[package]]
+name = "async-timeout"
+version = "5.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a5/ae/136395dfbfe00dfc94da3f3e136d0b13f394cba8f4841120e34226265780/async_timeout-5.0.1.tar.gz", hash = "sha256:d9321a7a3d5a6a5e187e824d2fa0793ce379a202935782d555d6e9d2735677d3", size = 9274, upload-time = "2024-11-06T16:41:39.6Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fe/ba/e2081de779ca30d473f21f5b30e0e737c438205440784c7dfc81efc2b029/async_timeout-5.0.1-py3-none-any.whl", hash = "sha256:39e3809566ff85354557ec2398b55e096c8364bacac9405a7a1fa429e77fe76c", size = 6233, upload-time = "2024-11-06T16:41:37.9Z" },
+]
+
+[[package]]
 name = "asyncio"
 version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -144,6 +172,36 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/bb/9b/b1661026ff24bc641b76b78c5222d614776b0c085bcfdac9bd15a1cb4b35/authlib-1.6.6.tar.gz", hash = "sha256:45770e8e056d0f283451d9996fbb59b70d45722b45d854d58f32878d0a40c38e", size = 164894, upload-time = "2025-12-12T08:01:41.464Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/51/321e821856452f7386c4e9df866f196720b1ad0c5ea1623ea7399969ae3b/authlib-1.6.6-py2.py3-none-any.whl", hash = "sha256:7d9e9bc535c13974313a87f53e8430eb6ea3d1cf6ae4f6efcd793f2e949143fd", size = 244005, upload-time = "2025-12-12T08:01:40.209Z" },
+]
+
+[[package]]
+name = "aws-msk-iam-sasl-signer-python"
+version = "1.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "boto3" },
+    { name = "botocore" },
+    { name = "click" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/38/8b/9af0a7def4ba357afadc89c06019d3735944cb3d6065a455f41580ba7fd6/aws_msk_iam_sasl_signer_python-1.0.2.tar.gz", hash = "sha256:3432d88a7c6db4887ceb1130ebaed0113bfda48b79ea811537add5f1d25fa13f", size = 24034, upload-time = "2025-03-05T20:49:48.582Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/06/43/f3ffd79fc4941b8d610530d81e1f600cfa1b8651affc25cb929fd0f2f2c9/aws_msk_iam_sasl_signer_python-1.0.2-py2.py3-none-any.whl", hash = "sha256:310eb2db9ca0ff55ed06a24212739b87533e7f1cf6f34e43aabbd97a3b21290e", size = 13279, upload-time = "2025-03-05T20:49:46.611Z" },
+]
+
+[[package]]
+name = "awslambdaric"
+version = "3.1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "simplejson" },
+    { name = "snapshot-restore-py" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a3/25/9ae3c97af6dc4628cf8094dd2189a8b97388409870fba1c54f58c64d5766/awslambdaric-3.1.1.tar.gz", hash = "sha256:1c1fd30570b9a2c5cc4ccd2151c883312c5eef2dbf759c8e9d29c18cec6de2e8", size = 4500924, upload-time = "2025-05-27T16:06:05.241Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/06/b0/4acb191304bb2364c88984b09fa17b435575f7a1b50d9ada79038c5e7db0/awslambdaric-3.1.1-cp314-cp314-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:537e4986f723cb981af01d031743c9ae09b9ddc497d2582a548da0d696c81809", size = 343258, upload-time = "2025-05-27T16:05:55.76Z" },
+    { url = "https://files.pythonhosted.org/packages/35/8d/7a39188d0e95fd9975deadeb56e4fba085b03a90c572a7cfa1f279b19e2d/awslambdaric-3.1.1-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a5860d96e08cc4bab5bd4d7a2cd5eeb10ea17d0269fe4c1b7c57ac8d06abbf70", size = 345840, upload-time = "2025-05-27T16:06:06.102Z" },
+    { url = "https://files.pythonhosted.org/packages/91/21/77c0d0867f263e270888c9c2fb85fa35e90b95d9d0cce32b252b3423c9c9/awslambdaric-3.1.1-cp314-cp314t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ad2ff7352517b590ca5748f75b9b9df906b111139753f35bcb069f25c14d3c94", size = 344984, upload-time = "2025-05-27T16:05:56.978Z" },
+    { url = "https://files.pythonhosted.org/packages/0e/6d/ad856d498a037b94a96866f22ce6f244fce73976f9c064cfbff5f5c94745/awslambdaric-3.1.1-cp314-cp314t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c8ecbcf05cf02f1bd263a0831b1acf3c29cd9296cb72e74067de71185f6c118", size = 347224, upload-time = "2025-05-27T16:06:08.408Z" },
 ]
 
 [[package]]
@@ -749,6 +807,18 @@ wheels = [
 ]
 
 [[package]]
+name = "mangum"
+version = "0.21.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/89/cb/d9f4d685a0b8eceac10991e15ac471d9568e4e42c2489ae9bf072828c1c2/mangum-0.21.0.tar.gz", hash = "sha256:e31ed72d67f9958fa4379f65df77729906dec6dfa00afa6ed4e06c77833000de", size = 89130, upload-time = "2026-02-01T17:17:42.816Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b7/50/e3c694b8e122551e4557450219283771334dee2ed5734a8398c8b8018c50/mangum-0.21.0-py3-none-any.whl", hash = "sha256:309e48f5c629542516c5106ecf079f4ec08809ed50df882238d98fe1392820c7", size = 17146, upload-time = "2026-02-01T17:17:41.553Z" },
+]
+
+[[package]]
 name = "markdown-it-py"
 version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1254,13 +1324,17 @@ name = "running-corgium"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "aiokafka" },
     { name = "asyncio" },
     { name = "asyncpg" },
     { name = "asyncpg-stubs" },
+    { name = "aws-msk-iam-sasl-signer-python" },
+    { name = "awslambdaric" },
     { name = "boto3" },
     { name = "fastapi" },
     { name = "fastapi-users", extra = ["sqlalchemy"] },
     { name = "frpc" },
+    { name = "mangum" },
     { name = "pydantic-settings" },
     { name = "pytest" },
     { name = "stravalib" },
@@ -1282,13 +1356,17 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiokafka", specifier = ">=0.12.0" },
     { name = "asyncio", specifier = ">=4.0.0" },
     { name = "asyncpg", specifier = ">=0.31.0" },
     { name = "asyncpg-stubs", specifier = ">=0.31.1" },
+    { name = "aws-msk-iam-sasl-signer-python", specifier = ">=1.0.0" },
+    { name = "awslambdaric", specifier = ">=3.0.0" },
     { name = "boto3", specifier = ">=1.35.0" },
     { name = "fastapi", specifier = ">=0.128.0" },
     { name = "fastapi-users", extras = ["sqlalchemy"], specifier = ">=15.0.3" },
     { name = "frpc", specifier = ">=0.0.6" },
+    { name = "mangum", specifier = ">=0.19.0" },
     { name = "pydantic-settings", specifier = ">=2.12.0" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "stravalib", specifier = ">=2.4" },
@@ -1374,12 +1452,30 @@ wheels = [
 ]
 
 [[package]]
+name = "simplejson"
+version = "3.20.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/41/f4/a1ac5ed32f7ed9a088d62a59d410d4c204b3b3815722e2ccfb491fa8251b/simplejson-3.20.2.tar.gz", hash = "sha256:5fe7a6ce14d1c300d80d08695b7f7e633de6cd72c80644021874d985b3393649", size = 85784, upload-time = "2025-09-26T16:29:36.64Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/05/5b/83e1ff87eb60ca706972f7e02e15c0b33396e7bdbd080069a5d1b53cf0d8/simplejson-3.20.2-py3-none-any.whl", hash = "sha256:3b6bb7fb96efd673eac2e4235200bfffdc2353ad12c54117e1e4e2fc485ac017", size = 57309, upload-time = "2025-09-26T16:29:35.312Z" },
+]
+
+[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81", size = 34031, upload-time = "2024-12-04T17:35:28.174Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274", size = 11050, upload-time = "2024-12-04T17:35:26.475Z" },
+]
+
+[[package]]
+name = "snapshot-restore-py"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/27/19/2d7584749a7f6d1b4b3a129995b1bc31e70ed9c5ecc323f1ee748b767268/snapshot-restore-py-1.0.0.tar.gz", hash = "sha256:4d27f82fb6f09968f422501e9c3c2dea48a46cd19dc798eb7d6cbc57523c8004", size = 3379, upload-time = "2024-11-13T14:40:22.477Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/10/b8/f9da2457e9dfb5872042202d69b329940527672e20cbfdb26610c09e1d8e/snapshot_restore_py-1.0.0-py3-none-any.whl", hash = "sha256:38f99e696793790f54658e71c68c7a8a40cea877c81232b5052383b1301aceba", size = 3782, upload-time = "2024-11-13T14:40:21.33Z" },
 ]
 
 [[package]]

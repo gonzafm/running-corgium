@@ -123,7 +123,7 @@ class DynamoService(ActivityRepository):
 
 
 async def ensure_dynamo_table(
-    endpoint_url: str, region: str, table_name: str
+    endpoint_url: str | None, region: str, table_name: str
 ) -> None:
     """Create the activities table in DynamoDB if it doesn't exist."""
     import boto3

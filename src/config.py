@@ -1,3 +1,5 @@
+import os
+
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -13,7 +15,7 @@ class Settings(BaseSettings):
     jwt_lifetime_seconds: int = 3600
 
     # Storage backend: "postgres" or "dynamodb"
-    db_backend: str = "postgres"
+    db_backend: str = "standalone"
 
     # Postgres settings
     db_host: str = "127.0.0.1"
@@ -23,11 +25,20 @@ class Settings(BaseSettings):
     db_name: str = "postgres"
 
     # DynamoDB settings
-    dynamodb_endpoint_url: str = "http://localhost:9000"
-    dynamodb_region: str = "us-east-1"
+    dynamodb_endpoint_url: str | None = None
+    dynamodb_region: str = "us-east-2"
     dynamodb_table_name: str = "activities"
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    # MSK settings (standalone export)
+    msk_bootstrap_servers: str = ""
+    msk_topic: str = "user-migration"
+    msk_region: str = "us-east-2"
+
+    @property
+    def is_lambda(self) -> bool:
+        return "AWS_LAMBDA_FUNCTION_NAME" in os.environ
+
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 
 settings = Settings()

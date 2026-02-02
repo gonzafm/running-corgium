@@ -114,8 +114,8 @@ def _get_route_methods() -> dict[str, set[str]]:
     """Returns dict of path -> set of methods for all app routes."""
     routes: dict[str, set[str]] = defaultdict(set)
     for route in app.routes:
-        if hasattr(route, "methods"):
-            routes[route.path].update(route.methods)
+        if hasattr(route, "methods") and hasattr(route, "path"):
+            routes[route.path].update(route.methods)  # type: ignore[attr-defined]
     return routes
 
 
