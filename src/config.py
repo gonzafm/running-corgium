@@ -8,7 +8,7 @@ from pydantic_settings.main import PydanticBaseSettingsSource
 class Settings(BaseSettings):
     strava_client_id: int
     strava_client_secret: str
-    strava_redirect_uri: str = "http://localhost:5173/auth/callback"
+    strava_redirect_uri: str = "http://localhost:8000/strava/authorize"
     environment: str = "dev"
 
     # JWT settings

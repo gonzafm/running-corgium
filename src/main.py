@@ -173,7 +173,7 @@ async def login_user(name: str):
     logging.info(f"Redirecting user {name} to Strava with session id {session_id}")
     response = RedirectResponse(url=redirect_url)
     response.set_cookie(
-        key="session_id", value=session_id, httponly=True, samesite="strict"
+        key="session_id", value=session_id, httponly=True, samesite="lax"
     )
     return response
 
@@ -184,7 +184,7 @@ async def authorize(code: str, session_id: str = Cookie(None)):
     try:
         await strava_service.authenticate_and_store(session_id, code)
         logging.info(f"Authorization successful for session {session_id}.")
-        return {"message": code}
+        return RedirectResponse(url="/dashboard")
     except Exception as e:
         logging.error(f"Authorization failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
