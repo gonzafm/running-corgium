@@ -8,7 +8,7 @@ export const cognitoApi = {
     const params = new URLSearchParams({
       client_id: clientId,
       response_type: 'code',
-      scope: 'openid email profile',
+      scope: 'openid email',
       redirect_uri: redirectUri,
     });
     return `https://${domain}/login?${params}`;
