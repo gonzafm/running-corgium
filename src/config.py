@@ -1,7 +1,8 @@
 import os
 
 from pydantic import SecretStr
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
+from pydantic_settings.main import PydanticBaseSettingsSource
 
 
 class Settings(BaseSettings):
@@ -38,7 +39,26 @@ class Settings(BaseSettings):
     def is_lambda(self) -> bool:
         return "AWS_LAMBDA_FUNCTION_NAME" in os.environ
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        if "AWS_LAMBDA_FUNCTION_NAME" in os.environ:
+            from pydantic_settings.sources.providers.aws import AWSSecretsManagerSettingsSource
+
+            secret_id = os.environ.get("SECRETS_MANAGER_SECRET_ID", "running-corgium/config")
+            aws_source = AWSSecretsManagerSettingsSource(
+                settings_cls,
+                secret_id=secret_id,
+                case_sensitive=False,
+            )
+            return (init_settings, aws_source, env_settings)
+        return (init_settings, env_settings, dotenv_settings, file_secret_settings)
 
 
 settings = Settings()

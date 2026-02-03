@@ -1,7 +1,7 @@
 """Tests for Lambda handler and DynamoDB-mode app behavior."""
 
 import os
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 
 class TestLambdaHandler:
@@ -22,9 +22,17 @@ class TestLambdaHandler:
 
 class TestConfigIsLambda:
     def test_is_lambda_true_when_env_set(self):
+        import json
+
         from src.config import Settings
 
-        with patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "my-func"}):
+        mock_client = MagicMock()
+        mock_client.get_secret_value.return_value = {"SecretString": json.dumps({})}
+
+        with (
+            patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "my-func"}),
+            patch("boto3.client", return_value=mock_client),
+        ):
             s = Settings(
                 strava_client_id=1,
                 strava_client_secret="s",
