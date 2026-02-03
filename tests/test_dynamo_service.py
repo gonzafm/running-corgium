@@ -77,14 +77,7 @@ class TestDynamoService(unittest.IsolatedAsyncioTestCase):
         await self.service.initialize()
 
         last_sync = self.service.get_last_sync_date()
-        self.assertIsNotNone(last_sync)
-        assert last_sync is not None  # for mypy
-        yesterday = datetime.now(timezone.utc) - timedelta(days=1)
-        self.assertAlmostEqual(
-            last_sync.timestamp(),
-            yesterday.timestamp(),
-            delta=60,
-        )
+        self.assertIsNone(last_sync)
 
     async def test_initialize_only_runs_once(self) -> None:
         self._setup_initialize()

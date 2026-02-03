@@ -44,10 +44,8 @@ class DynamoService(ActivityRepository):
             self._last_sync_date = max_date
             logging.info(f"Last sync date from DynamoDB: {self._last_sync_date}")
         else:
-            self._last_sync_date = datetime.now(timezone.utc) - timedelta(days=1)
-            logging.info(
-                f"No activities in DynamoDB, assuming synced until: {self._last_sync_date}"
-            )
+            self._last_sync_date = None
+            logging.info("No activities in DynamoDB, will fetch recent activities")
 
         logging.info(f"Loaded {len(self._synced_ids)} existing activity IDs")
         self._initialized = True
@@ -99,7 +97,7 @@ class DynamoService(ActivityRepository):
 
         logging.info(f"Inserting activity {activity.id} into DynamoDB")
         item: dict[str, Any] = {
-            "strava_id": activity.id,
+            "strava_id": str(activity.id),
             "strava_response": activity.model_dump_json(),
         }
         if activity.start_date:
@@ -137,7 +135,7 @@ async def ensure_dynamo_table(
             TableName=table_name,
             KeySchema=[{"AttributeName": "strava_id", "KeyType": "HASH"}],
             AttributeDefinitions=[
-                {"AttributeName": "strava_id", "AttributeType": "N"},
+                {"AttributeName": "strava_id", "AttributeType": "S"},
             ],
             BillingMode="PAY_PER_REQUEST",
         )

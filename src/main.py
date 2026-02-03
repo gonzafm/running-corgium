@@ -11,9 +11,12 @@ from src.config import settings
 from src.database.activity_repository import ActivityRepository
 from src.strava import StravaService
 
-# Configure logging
+# Configure logging — force=True so it takes effect even in Lambda
+# (where the runtime may have already configured the root logger)
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    force=True,
 )
 
 

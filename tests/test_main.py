@@ -45,11 +45,11 @@ def test_authorize(mock_strava_service):
     mock_strava_service.authenticate_and_store = AsyncMock()
 
     client.cookies.set("session_id", session_id)
-    response = client.get(f"/strava/authorize?code={code}")
+    response = client.get(f"/strava/authorize?code={code}", follow_redirects=False)
     client.cookies.clear()
 
-    assert response.status_code == 200
-    assert response.json() == {"message": code}
+    assert response.status_code == 307
+    assert response.headers["location"] == "/dashboard"
     mock_strava_service.authenticate_and_store.assert_called_once_with(session_id, code)
 
 
