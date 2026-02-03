@@ -67,6 +67,16 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+logger = logging.getLogger("running-corgium")
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info("%s %s", request.method, request.url.path)
+    response = await call_next(request)
+    logger.info("%s %s -> %d", request.method, request.url.path, response.status_code)
+    return response
+
 
 # --- Auth setup: standalone uses fastapi-users, aws uses API Gateway/Cognito ---
 if settings.db_backend == "standalone":
@@ -144,6 +154,16 @@ else:
         }
 
     current_active_user = Depends(_get_cognito_user)
+
+    @app.get("/users/me", tags=["users"])
+    async def users_me(user: dict[str, str] = Depends(_get_cognito_user)):
+        return {
+            "id": 0,
+            "email": user["email"],
+            "is_active": True,
+            "is_superuser": False,
+            "is_verified": True,
+        }
 
 
 @app.get("/login/{name}")
