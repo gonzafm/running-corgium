@@ -20,8 +20,12 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     last_name: Mapped[str | None] = mapped_column(String, default=None)
     display_name: Mapped[str | None] = mapped_column(String, default=None)
     picture: Mapped[str | None] = mapped_column(String, default=None)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class Activity(Base):

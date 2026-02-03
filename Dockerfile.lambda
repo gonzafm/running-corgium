@@ -17,6 +17,7 @@ WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /app/src /app/src
+COPY frontend/dist/ /app/frontend/dist/
 
 ENV PATH="/app/.venv/bin:$PATH"
 ENV DB_BACKEND=dynamodb

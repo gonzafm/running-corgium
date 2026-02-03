@@ -1,9 +1,11 @@
 import logging
 import uuid
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import Cookie, Depends, FastAPI, HTTPException, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from src.config import settings
 from src.database.activity_repository import ActivityRepository
@@ -186,3 +188,19 @@ async def list_activities(session_id: str = Cookie(None)):
         return await strava_service.list_activities(session_id)
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
+
+
+# --- SPA static files ---
+_frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+if _frontend_dist.is_dir():
+    app.mount(
+        "/assets", StaticFiles(directory=_frontend_dist / "assets"), name="static"
+    )
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        # Serve actual files (e.g. vite.svg) if they exist
+        file_path = _frontend_dist / full_path
+        if full_path and file_path.is_file():
+            return FileResponse(file_path)
+        return FileResponse(_frontend_dist / "index.html")

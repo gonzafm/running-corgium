@@ -49,9 +49,13 @@ class Settings(BaseSettings):
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         if "AWS_LAMBDA_FUNCTION_NAME" in os.environ:
-            from pydantic_settings.sources.providers.aws import AWSSecretsManagerSettingsSource
+            from pydantic_settings.sources.providers.aws import (
+                AWSSecretsManagerSettingsSource,
+            )
 
-            secret_id = os.environ.get("SECRETS_MANAGER_SECRET_ID", "running-corgium/config")
+            secret_id = os.environ.get(
+                "SECRETS_MANAGER_SECRET_ID", "running-corgium/config"
+            )
             aws_source = AWSSecretsManagerSettingsSource(
                 settings_cls,
                 secret_id=secret_id,

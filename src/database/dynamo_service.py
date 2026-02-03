@@ -78,13 +78,9 @@ class DynamoService(ActivityRepository):
                     str(item["strava_response"])
                 )
                 activities.append(activity)
-                logging.debug(
-                    f"Parsed activity {item['strava_id']}: {activity.name}"
-                )
+                logging.debug(f"Parsed activity {item['strava_id']}: {activity.name}")
             except (ValidationError, KeyError) as e:
-                logging.error(
-                    f"Failed to parse activity {item.get('strava_id')}: {e}"
-                )
+                logging.error(f"Failed to parse activity {item.get('strava_id')}: {e}")
 
         logging.info(f"Returning {len(activities)} parsed activities")
         return activities
@@ -113,8 +109,7 @@ class DynamoService(ActivityRepository):
         self._synced_ids.add(activity.id)
 
         if activity.start_date and (
-            self._last_sync_date is None
-            or activity.start_date > self._last_sync_date
+            self._last_sync_date is None or activity.start_date > self._last_sync_date
         ):
             self._last_sync_date = activity.start_date
 
@@ -128,9 +123,7 @@ async def ensure_dynamo_table(
     """Create the activities table in DynamoDB if it doesn't exist."""
     import boto3
 
-    dynamodb = boto3.resource(
-        "dynamodb", endpoint_url=endpoint_url, region_name=region
-    )
+    dynamodb = boto3.resource("dynamodb", endpoint_url=endpoint_url, region_name=region)
     existing: list[str] = await asyncio.to_thread(
         lambda: dynamodb.meta.client.list_tables()["TableNames"]
     )

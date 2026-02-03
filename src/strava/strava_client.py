@@ -69,7 +69,9 @@ class StravaService:
             db_activities = await self.activity_repo.get_activities(limit=limit)
             logging.info(f"Returning {len(db_activities)} activities from database")
             if db_activities:
-                logging.info(f"First activity: {db_activities[0].name} (ID: {db_activities[0].id})")
+                logging.info(
+                    f"First activity: {db_activities[0].name} (ID: {db_activities[0].id})"
+                )
             return db_activities
         except ValueError:
             raise
@@ -108,7 +110,9 @@ class StravaService:
             if activity.id is not None and not self.activity_repo.is_activity_synced(
                 activity.id
             ):
-                logging.info(f"Inserting new activity: {activity.name} (ID: {activity.id})")
+                logging.info(
+                    f"Inserting new activity: {activity.name} (ID: {activity.id})"
+                )
                 inserted = await self.activity_repo.insert_activity(activity)
                 if inserted:
                     new_count += 1

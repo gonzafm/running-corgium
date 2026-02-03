@@ -117,7 +117,11 @@ class TestSerializeUser:
         mock_user.__table__ = User.__table__
         ts = datetime(2026, 6, 15, 12, 30, 0, tzinfo=timezone.utc)
         for col in User.__table__.columns:
-            setattr(mock_user, col.key, ts if "date" in col.key or "at" in col.key else "val")
+            setattr(
+                mock_user,
+                col.key,
+                ts if "date" in col.key or "at" in col.key else "val",
+            )
 
         mock_user.id = 1
 
