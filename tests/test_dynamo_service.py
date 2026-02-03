@@ -15,7 +15,7 @@ exists.
 import unittest
 from decimal import Decimal
 from unittest.mock import MagicMock
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 from src.database.dynamo_service import DynamoService
 

@@ -1,0 +1,36 @@
+@startuml c4-architecture
+!include <C4/C4_Container>
+
+title Running Corgium - AWS Container Diagram
+
+Person(user, "User", "Athlete who tracks running activities")
+
+System_Ext(strava, "Strava API", "Fitness tracking platform.\nOAuth2 for authorization,\nREST API for activity data.")
+
+System_Boundary(aws, "AWS Cloud (us-east-2)") {
+
+    Container(apigw, "API Gateway", "HTTP API", "Routes requests to Lambda.\nJWT authorizer validates Cognito\ntokens on protected routes.")
+
+    Container(cognito, "Cognito User Pool", "running-corgium", "Hosted UI for login/signup.\nIssues JWTs (id_token).\nManages user identities.")
+
+    Container(lambda, "Lambda Function", "Python 3.14 / Docker", "Runs FastAPI app via Mangum.\nServes SPA static files and\nhandles REST API endpoints.")
+
+    ContainerDb(dynamodb, "DynamoDB", "activities table", "Stores Strava activity data.\nPartition key: strava_id (S).\nAttributes: strava_response, create_date.")
+
+    Container(ecr, "ECR", "Container Registry", "Stores Lambda container\nimages (linux/amd64).")
+
+    Container(secrets, "Secrets Manager", "running-corgium/config", "Runtime configuration:\nStrava credentials, JWT secret,\nredirect URIs, DB settings.")
+
+    Rel(apigw, lambda, "Invokes", "Lambda proxy integration")
+    Rel(apigw, cognito, "Validates JWTs", "Issuer + Audience check")
+    Rel(lambda, dynamodb, "Read/Write activities", "boto3 / put_item, scan")
+    Rel(lambda, secrets, "Loads config at startup", "pydantic-settings AWS source")
+    Rel(ecr, lambda, "Provides container image", "Image URI")
+}
+
+Rel(user, apigw, "HTTPS requests", "Bearer token + cookies")
+Rel(user, cognito, "Login / Sign up", "Hosted UI redirect\n(authorization code flow)")
+Rel(lambda, strava, "OAuth token exchange\n+ activity sync", "HTTPS / REST")
+
+SHOW_LEGEND()
+@enduml

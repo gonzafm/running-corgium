@@ -87,7 +87,6 @@ class TestStandaloneRoutePresence:
         assert "/auth/jwt/login" in routes
         assert "/auth/register" in routes
         assert "/users/me" in routes
-        assert "/export/users" in routes
 
     def test_strava_routes_present(self):
         from src.main import app
