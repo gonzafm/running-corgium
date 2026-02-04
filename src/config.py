@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     jwt_secret: SecretStr
     jwt_lifetime_seconds: int = 3600
 
-    # Storage backend: "postgres" or "dynamodb"
+    # Storage backend: "standalone" or "aws"
     db_backend: str = "standalone"
 
     # Postgres settings

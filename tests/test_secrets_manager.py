@@ -35,7 +35,7 @@ class TestLambdaModeSourceSelection:
             "STRAVA_CLIENT_ID": "12345",
             "STRAVA_CLIENT_SECRET": "secret",
             "JWT_SECRET": "jwt-secret",
-            "DB_BACKEND": "dynamodb",
+            "DB_BACKEND": "aws",
         }
         mock_client = MagicMock()
         mock_client.get_secret_value.return_value = {
@@ -120,7 +120,7 @@ class TestLambdaModeSourceSelection:
             "STRAVA_CLIENT_ID": "99999",
             "STRAVA_CLIENT_SECRET": "from-secrets-manager",
             "JWT_SECRET": "sm-jwt-secret",
-            "DB_BACKEND": "dynamodb",
+            "DB_BACKEND": "aws",
             "DYNAMODB_REGION": "eu-west-1",
             "DYNAMODB_TABLE_NAME": "my-activities",
         }
@@ -142,6 +142,6 @@ class TestLambdaModeSourceSelection:
             assert s.strava_client_id == 99999
             assert s.strava_client_secret == "from-secrets-manager"
             assert s.jwt_secret.get_secret_value() == "sm-jwt-secret"
-            assert s.db_backend == "dynamodb"
+            assert s.db_backend == "aws"
             assert s.dynamodb_region == "eu-west-1"
             assert s.dynamodb_table_name == "my-activities"

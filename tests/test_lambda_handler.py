@@ -119,6 +119,6 @@ class TestConditionalAuthLogic:
             strava_client_id=1,
             strava_client_secret="s",
             jwt_secret="j",
-            db_backend="dynamodb",
+            db_backend="aws",
         )
-        assert s.db_backend == "dynamodb"
+        assert s.db_backend == "aws"
