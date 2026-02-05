@@ -67,3 +67,21 @@ def test_athlete():
         assert response.status_code == 200
         assert response.json() == mock_athlete
         mock_get.assert_called_once_with(session_id)
+
+
+def test_activities():
+    mock_activities = [{"id": 1, "name": "Morning Run"}, {"id": 2, "name": "Evening Walk"}]
+    session_id = "test_session_id"
+    with patch.object(
+        app.state.strava_service,
+        "list_activities",
+        new_callable=AsyncMock,
+        return_value=mock_activities,
+    ) as mock_list:
+        client.cookies.set("session_id", session_id)
+        response = client.get("/strava/activities")
+        client.cookies.clear()
+
+        assert response.status_code == 200
+        assert response.json() == mock_activities
+        mock_list.assert_called_once_with(session_id)

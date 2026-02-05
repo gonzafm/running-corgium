@@ -8,6 +8,7 @@ from src.database.postgres_service import PostgresService
 class TestPostgresService(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
         self.mock_session = AsyncMock()
+        self.mock_session.add = MagicMock()
         self.mock_session_maker = MagicMock()
         self.mock_session_maker.return_value.__aenter__.return_value = self.mock_session
         self.mock_session_maker.return_value.__aexit__.return_value = None
@@ -177,6 +178,7 @@ class TestPostgresServiceSessionUsage(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self) -> None:
         self.mock_session = AsyncMock()
+        self.mock_session.add = MagicMock()
         self.mock_session_maker = MagicMock()
         self.mock_session_maker.return_value.__aenter__.return_value = self.mock_session
         self.mock_session_maker.return_value.__aexit__.return_value = None

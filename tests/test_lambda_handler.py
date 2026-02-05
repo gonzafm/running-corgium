@@ -97,10 +97,10 @@ class TestStandaloneRoutePresence:
 
 
 class TestConditionalAuthLogic:
-    """Verify the conditional branching logic in main.py.
+    """Verify conditional branching based on deployment mode.
 
-    Since module-level code in main.py uses settings.db_backend to decide
-    which auth system to wire, we test the branching by asserting:
+    The deployment factory in src/deployment.py uses settings.db_backend to
+    decide which auth system and database to wire. We test by asserting:
     - In standalone (default test mode): auth routes + export are present
     - The config correctly reports db_backend values
     """
@@ -111,8 +111,8 @@ class TestConditionalAuthLogic:
 
         assert current_active_user is not None
 
-    def test_dynamodb_backend_skips_postgres_imports(self):
-        """Creating a dynamodb Settings doesn't trigger Postgres engine creation."""
+    def test_aws_backend_skips_postgres_imports(self):
+        """Creating an aws-mode Settings doesn't trigger Postgres engine creation."""
         from src.config import Settings
 
         s = Settings(
