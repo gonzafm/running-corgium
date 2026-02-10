@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
-from sqlalchemy import DateTime, Integer, String, func
+from sqlalchemy import BigInteger, DateTime, Integer, String, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -32,6 +32,6 @@ class Activity(Base):
     __tablename__ = "activities"
     __table_args__ = {"schema": "running_corgium"}
 
-    strava_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    strava_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     create_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     strava_response: Mapped[str] = mapped_column(JSONB)

@@ -6,6 +6,8 @@ from pydantic_settings.main import PydanticBaseSettingsSource
 
 
 class Settings(BaseSettings):
+    model_config = {"env_file": ".env", "extra": "ignore"}
+
     strava_client_id: int
     strava_client_secret: str
     strava_redirect_uri: str = "http://localhost:8000/strava/authorize"

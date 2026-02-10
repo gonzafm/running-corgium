@@ -29,18 +29,20 @@ def create_strava_router(strava_service: StravaService) -> APIRouter:
         return response
 
     @router.get("/strava/authorize")
-    async def authorize(code: str, session_id: str = Cookie(None)):
+    async def authorize(code: str, session_id: str | None = Cookie(None)):
         logger.info("Strava called back with code: %s", code)
+        if not session_id:
+            raise HTTPException(status_code=401, detail="Missing session cookie")
         try:
             await strava_service.authenticate_and_store(session_id, code)
             logger.info("Authorization successful for session %s.", session_id)
-            return RedirectResponse(url="/dashboard")
+            return {"message": "Authorization successful"}
         except Exception as e:
             logger.error("Authorization failed: %s", e)
             raise HTTPException(status_code=400, detail=str(e))
 
     @router.get("/strava/athlete")
-    async def athlete(session_id: str = Cookie(None)):
+    async def athlete(session_id: str | None = Cookie(None)):
         if not session_id:
             raise HTTPException(status_code=401, detail="Not authenticated")
         try:
@@ -49,7 +51,7 @@ def create_strava_router(strava_service: StravaService) -> APIRouter:
             raise HTTPException(status_code=401, detail=str(e))
 
     @router.get("/strava/activities")
-    async def list_activities(session_id: str = Cookie(None)):
+    async def list_activities(session_id: str | None = Cookie(None)):
         if not session_id:
             raise HTTPException(status_code=401, detail="Not authenticated")
         try:
