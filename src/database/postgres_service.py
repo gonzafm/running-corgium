@@ -6,10 +6,11 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from stravalib.model import SummaryActivity
 
+from src.database.activity_repository import ActivityRepository
 from src.database.models import Activity
 
 
-class PostgresService:
+class PostgresService(ActivityRepository):
     def __init__(self, session_maker: async_sessionmaker[AsyncSession]) -> None:
         self._session_maker = session_maker
         self._last_sync_date: datetime | None = None
@@ -23,9 +24,7 @@ class PostgresService:
         logging.info("Initializing PostgresService from database")
         async with self._session_maker() as session:
             # Get the most recent activity date from DB
-            result = await session.execute(
-                select(func.max(Activity.create_date))
-            )
+            result = await session.execute(select(func.max(Activity.create_date)))
             last_date = result.scalar_one_or_none()
             if last_date:
                 self._last_sync_date = last_date
@@ -56,9 +55,7 @@ class PostgresService:
         logging.info(f"Fetching up to {limit} activities from database")
         async with self._session_maker() as session:
             result = await session.execute(
-                select(Activity)
-                .order_by(Activity.create_date.desc())
-                .limit(limit)
+                select(Activity).order_by(Activity.create_date.desc()).limit(limit)
             )
             rows = result.scalars().all()
             logging.info(f"Found {len(rows)} activities in database")
@@ -66,7 +63,10 @@ class PostgresService:
             activities: list[SummaryActivity] = []
             for row in rows:
                 try:
-                    activity = SummaryActivity.model_validate_json(row.strava_response)
+                    logging.debug(
+                        f"Parsing activity {type(row.strava_response)} {row.strava_response}"
+                    )
+                    activity = SummaryActivity.model_validate(row.strava_response)
                     activities.append(activity)
                     logging.debug(f"Parsed activity {row.strava_id}: {activity.name}")
                 except ValidationError as e:

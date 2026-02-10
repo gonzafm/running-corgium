@@ -9,8 +9,8 @@ class TestStravaService(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.patcher = patch("src.strava.strava_client.Client")
         self.MockClient = self.patcher.start()
-        self.mock_session_maker = AsyncMock()
-        self.service = StravaService(self.mock_session_maker)
+        self.mock_activity_repo = MagicMock()
+        self.service = StravaService(self.mock_activity_repo)
 
     def tearDown(self):
         self.patcher.stop()
@@ -74,12 +74,12 @@ class TestStravaService(unittest.IsolatedAsyncioTestCase):
         mock_activity2.id = 222
         mock_activity2.name = "Evening Walk"
 
-        self.service.postgres_service = MagicMock()
-        self.service.postgres_service.get_last_sync_date.return_value = datetime(
+        self.service.activity_repo = MagicMock()
+        self.service.activity_repo.get_last_sync_date.return_value = datetime(
             2024, 1, 10, tzinfo=timezone.utc
         )
-        self.service.postgres_service.is_activity_synced.return_value = True
-        self.service.postgres_service.get_activities = AsyncMock(
+        self.service.activity_repo.is_activity_synced.return_value = True
+        self.service.activity_repo.get_activities = AsyncMock(
             return_value=[mock_activity1, mock_activity2]
         )
 
@@ -92,18 +92,18 @@ class TestStravaService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].name, "Morning Run")
         self.assertEqual(result[1].name, "Evening Walk")
-        self.service.postgres_service.get_activities.assert_called_once_with(limit=100)
+        self.service.activity_repo.get_activities.assert_called_once_with(limit=100)
 
     async def test_list_activities_syncs_new_activities_first(self):
         session_id = "test-session-123"
         self.service.tokens[session_id] = "mock_token"
         last_sync = datetime(2024, 1, 10, 0, 0, 0, tzinfo=timezone.utc)
 
-        self.service.postgres_service = MagicMock()
-        self.service.postgres_service.get_last_sync_date.return_value = last_sync
-        self.service.postgres_service.is_activity_synced.return_value = False
-        self.service.postgres_service.insert_activity = AsyncMock(return_value=True)
-        self.service.postgres_service.get_activities = AsyncMock(return_value=[])
+        self.service.activity_repo = MagicMock()
+        self.service.activity_repo.get_last_sync_date.return_value = last_sync
+        self.service.activity_repo.is_activity_synced.return_value = False
+        self.service.activity_repo.insert_activity = AsyncMock(return_value=True)
+        self.service.activity_repo.get_activities = AsyncMock(return_value=[])
 
         mock_activity = MagicMock()
         mock_activity.id = 12345
@@ -115,7 +115,7 @@ class TestStravaService(unittest.IsolatedAsyncioTestCase):
         # Should fetch from Strava using after parameter
         self.service.client.get_activities.assert_called_once_with(after=last_sync)
         # Should insert the new activity
-        self.service.postgres_service.insert_activity.assert_called_once_with(
+        self.service.activity_repo.insert_activity.assert_called_once_with(
             mock_activity
         )
 
@@ -123,11 +123,11 @@ class TestStravaService(unittest.IsolatedAsyncioTestCase):
         session_id = "test-session-123"
         self.service.tokens[session_id] = "mock_token"
 
-        self.service.postgres_service = MagicMock()
-        self.service.postgres_service.get_last_sync_date.return_value = None
-        self.service.postgres_service.is_activity_synced.return_value = True
-        self.service.postgres_service.insert_activity = AsyncMock()
-        self.service.postgres_service.get_activities = AsyncMock(return_value=[])
+        self.service.activity_repo = MagicMock()
+        self.service.activity_repo.get_last_sync_date.return_value = None
+        self.service.activity_repo.is_activity_synced.return_value = True
+        self.service.activity_repo.insert_activity = AsyncMock()
+        self.service.activity_repo.get_activities = AsyncMock(return_value=[])
 
         mock_activity = MagicMock()
         mock_activity.id = 12345
@@ -137,17 +137,17 @@ class TestStravaService(unittest.IsolatedAsyncioTestCase):
         await self.service.list_activities(session_id)
 
         # Should not insert already synced activities
-        self.service.postgres_service.insert_activity.assert_not_called()
+        self.service.activity_repo.insert_activity.assert_not_called()
 
     async def test_list_activities_no_sync_date_fetches_recent(self):
         session_id = "test-session-123"
         self.service.tokens[session_id] = "mock_token"
 
-        self.service.postgres_service = MagicMock()
-        self.service.postgres_service.get_last_sync_date.return_value = None
-        self.service.postgres_service.is_activity_synced.return_value = False
-        self.service.postgres_service.insert_activity = AsyncMock(return_value=True)
-        self.service.postgres_service.get_activities = AsyncMock(return_value=[])
+        self.service.activity_repo = MagicMock()
+        self.service.activity_repo.get_last_sync_date.return_value = None
+        self.service.activity_repo.is_activity_synced.return_value = False
+        self.service.activity_repo.insert_activity = AsyncMock(return_value=True)
+        self.service.activity_repo.get_activities = AsyncMock(return_value=[])
 
         self.service.client.get_activities.return_value = []
 
@@ -165,10 +165,10 @@ class TestStravaService(unittest.IsolatedAsyncioTestCase):
     async def test_list_activities_sets_token_on_client(self):
         session_id = "test-session-123"
         self.service.tokens[session_id] = "mock_token"
-        self.service.postgres_service = MagicMock()
-        self.service.postgres_service.get_last_sync_date.return_value = None
-        self.service.postgres_service.is_activity_synced.return_value = False
-        self.service.postgres_service.get_activities = AsyncMock(return_value=[])
+        self.service.activity_repo = MagicMock()
+        self.service.activity_repo.get_last_sync_date.return_value = None
+        self.service.activity_repo.is_activity_synced.return_value = False
+        self.service.activity_repo.get_activities = AsyncMock(return_value=[])
         self.service.client.get_activities.return_value = []
 
         await self.service.list_activities(session_id)
@@ -178,24 +178,24 @@ class TestStravaService(unittest.IsolatedAsyncioTestCase):
     async def test_list_activities_with_custom_limit(self):
         session_id = "test-session-123"
         self.service.tokens[session_id] = "mock_token"
-        self.service.postgres_service = MagicMock()
-        self.service.postgres_service.get_last_sync_date.return_value = None
-        self.service.postgres_service.is_activity_synced.return_value = False
-        self.service.postgres_service.get_activities = AsyncMock(return_value=[])
+        self.service.activity_repo = MagicMock()
+        self.service.activity_repo.get_last_sync_date.return_value = None
+        self.service.activity_repo.is_activity_synced.return_value = False
+        self.service.activity_repo.get_activities = AsyncMock(return_value=[])
         self.service.client.get_activities.return_value = []
 
         await self.service.list_activities(session_id, limit=5)
 
         # Custom limit applies to DB fetch
-        self.service.postgres_service.get_activities.assert_called_once_with(limit=5)
+        self.service.activity_repo.get_activities.assert_called_once_with(limit=5)
 
     async def test_list_activities_db_failure_raises_error(self):
         session_id = "test-session-123"
         self.service.tokens[session_id] = "mock_token"
-        self.service.postgres_service = MagicMock()
-        self.service.postgres_service.get_last_sync_date.return_value = None
-        self.service.postgres_service.is_activity_synced.return_value = False
-        self.service.postgres_service.insert_activity = AsyncMock(
+        self.service.activity_repo = MagicMock()
+        self.service.activity_repo.get_last_sync_date.return_value = None
+        self.service.activity_repo.is_activity_synced.return_value = False
+        self.service.activity_repo.insert_activity = AsyncMock(
             side_effect=Exception("Database connection failed")
         )
 

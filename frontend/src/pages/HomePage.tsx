@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { config } from '../config';
+import { cognitoApi } from '../api/cognito';
 
 type Mode = 'login' | 'register';
 
@@ -44,6 +46,24 @@ export function HomePage() {
     setConfirmPassword('');
   };
 
+  if (config.authMode === 'cognito') {
+    return (
+      <div className="text-center flex flex-col justify-center items-center w-full">
+        <h1 className="text-4xl mb-2">Running Corgium</h1>
+        <p className="text-gray-500 mb-8">Sign in to your account</p>
+
+        <button
+          onClick={() => {
+            window.location.href = cognitoApi.getLoginUrl();
+          }}
+          className="py-3 px-6 rounded bg-[#14b8a6] text-white hover:bg-[#0d9488] cursor-pointer max-w-[300px] w-full"
+        >
+          Sign in
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="text-center flex flex-col justify-center items-center w-full">
       <h1 className="text-4xl mb-2">Running Corgium</h1>
@@ -51,7 +71,10 @@ export function HomePage() {
         {mode === 'login' ? 'Sign in to your account' : 'Create a new account'}
       </p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 items-center max-w-[300px] w-full mx-auto">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-4 items-center max-w-[300px] w-full mx-auto"
+      >
         <input
           type="email"
           placeholder="Email"
@@ -89,7 +112,11 @@ export function HomePage() {
           disabled={submitting}
           className="w-full py-3 px-6 rounded bg-[#14b8a6] text-white hover:bg-[#0d9488] cursor-pointer disabled:opacity-50"
         >
-          {submitting ? 'Please wait...' : mode === 'login' ? 'Sign in' : 'Register'}
+          {submitting
+            ? 'Please wait...'
+            : mode === 'login'
+              ? 'Sign in'
+              : 'Register'}
         </button>
 
         <button
@@ -97,7 +124,9 @@ export function HomePage() {
           onClick={toggleMode}
           className="text-[#14b8a6] hover:underline bg-transparent border-none cursor-pointer text-sm"
         >
-          {mode === 'login' ? "Don't have an account? Register" : 'Already have an account? Sign in'}
+          {mode === 'login'
+            ? "Don't have an account? Register"
+            : 'Already have an account? Sign in'}
         </button>
       </form>
     </div>

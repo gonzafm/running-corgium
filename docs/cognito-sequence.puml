@@ -1,0 +1,114 @@
+@startuml cognito-sequence
+title Cognito Authentication & Strava Authorization Flow
+
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBorderColor #333
+skinparam sequenceLifeLineBorderColor #999
+
+actor User as user
+participant "Browser\n(React SPA)" as spa
+participant "API Gateway\n(HTTP API)" as apigw
+participant "Cognito\n(Hosted UI)" as cognito
+participant "Lambda\n(FastAPI)" as lambda
+participant "DynamoDB" as dynamo
+participant "Strava API" as strava
+
+== Cognito Login ==
+
+user -> spa : Click "Sign in"
+spa -> spa : Build Hosted UI URL\n(client_id, scope=openid email,\nresponse_type=code, redirect_uri)
+spa -> cognito : Redirect to /login
+cognito -> user : Show login form
+user -> cognito : Enter credentials
+cognito -> cognito : Validate credentials\nIssue authorization code
+cognito -> spa : Redirect to /auth/callback?code=<code>
+
+spa -> cognito : POST /oauth2/token\n(code, client_id, redirect_uri,\ngrant_type=authorization_code)
+cognito --> spa : { id_token, access_token, refresh_token }
+
+spa -> spa : Store id_token in localStorage\nDecode JWT (sub, email, exp)
+spa -> spa : Set Authorization header\nfor future requests
+
+== Token Validation (on page load) ==
+
+spa -> spa : Read id_token from localStorage
+spa -> spa : Decode JWT, check exp claim
+alt Token valid
+    spa -> spa : Set authenticated state
+else Token expired
+    spa -> spa : Clear token, redirect to login
+end
+
+== Protected API Request ==
+
+user -> spa : Navigate to Dashboard
+spa -> apigw : GET /users/me\nAuthorization: Bearer <id_token>
+apigw -> apigw : JWT Authorizer validates token\n(issuer, audience, signature, exp)
+
+alt Token valid
+    apigw -> lambda : Forward request\n(claims in event.requestContext.authorizer)
+    lambda -> lambda : Extract user from claims\n(sub, email)
+    lambda --> apigw : 200 { id, email, is_active }
+    apigw --> spa : 200 User info
+else Token invalid or missing
+    apigw --> spa : 401 Unauthorized\n(Lambda never invoked)
+end
+
+== Strava OAuth (after Cognito login) ==
+
+user -> spa : Click "Connect Strava"
+spa -> apigw : GET /login/{name}\n(no JWT authorizer on this route)
+apigw -> lambda : Forward request
+lambda -> lambda : Generate session_id (UUID)\nBuild Strava auth URL
+lambda --> apigw : 307 Redirect to Strava\nSet-Cookie: session_id (httponly, lax)
+apigw --> spa : 307 + Set-Cookie
+
+spa -> strava : Redirect to Strava authorization
+strava -> user : Show authorization consent
+user -> strava : Approve access
+strava -> spa : Redirect to /strava/authorize?code=<code>\n(browser sends session_id cookie)
+
+note over apigw : /strava/authorize has NO JWT\nauthorizer (falls through to $default)\nbecause Strava redirect has no token
+
+spa -> apigw : GET /strava/authorize?code=<code>\nCookie: session_id=<uuid>
+apigw -> lambda : Forward request
+lambda -> strava : Exchange code for access token\n(POST /oauth/token)
+strava --> lambda : { access_token, refresh_token }
+lambda -> lambda : Store tokens in memory\nkeyed by session_id
+lambda --> apigw : 307 Redirect to /dashboard
+apigw --> spa : 307 /dashboard
+
+== Activity Retrieval ==
+
+spa -> apigw : GET /strava/activities\nAuthorization: Bearer <id_token>\nCookie: session_id=<uuid>
+apigw -> apigw : JWT Authorizer validates token
+apigw -> lambda : Forward request
+
+lambda -> dynamo : Scan for last sync date
+dynamo --> lambda : Existing activities + max date
+
+alt First sync (table empty)
+    lambda -> strava : GET /athlete/activities?limit=50
+else Incremental sync
+    lambda -> strava : GET /athlete/activities?after=<last_sync>
+end
+
+strava --> lambda : Activity list (JSON)
+lambda -> dynamo : PutItem for each new activity
+dynamo --> lambda : OK
+
+lambda -> dynamo : Scan all activities (sorted, limited)
+dynamo --> lambda : Activity records
+lambda --> apigw : 200 [ activities ]
+apigw --> spa : Activity list
+spa -> user : Render activities table
+
+== Logout ==
+
+user -> spa : Click "Logout"
+spa -> spa : Clear localStorage\nClear Authorization header
+spa -> cognito : Redirect to /logout\n(client_id, logout_uri)
+cognito -> spa : Redirect to app root
+spa -> user : Show login page
+
+@enduml

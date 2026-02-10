@@ -1,20 +1,19 @@
 import asyncio
 import logging
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from stravalib import Client
 from stravalib.model import SummaryActivity
 
 from src.config import settings
-from src.database.postgres_service import PostgresService
+from src.database.activity_repository import ActivityRepository
 
 
 class StravaService:
     tokens: dict[str, str] = {}
 
-    def __init__(self, session_maker: async_sessionmaker[AsyncSession]) -> None:
+    def __init__(self, activity_repo: ActivityRepository) -> None:
         self.client = Client()
-        self.postgres_service = PostgresService(session_maker)
+        self.activity_repo = activity_repo
 
     def get_basic_info(self) -> str:
         logging.info("Getting basic info from Strava")
@@ -67,10 +66,12 @@ class StravaService:
             logging.info(f"Sync complete: {new_count} new activities")
 
             # Return all activities from database
-            db_activities = await self.postgres_service.get_activities(limit=limit)
+            db_activities = await self.activity_repo.get_activities(limit=limit)
             logging.info(f"Returning {len(db_activities)} activities from database")
             if db_activities:
-                logging.info(f"First activity: {db_activities[0].name} (ID: {db_activities[0].id})")
+                logging.info(
+                    f"First activity: {db_activities[0].name} (ID: {db_activities[0].id})"
+                )
             return db_activities
         except ValueError:
             raise
@@ -84,7 +85,7 @@ class StravaService:
         Only fetches activities after the last sync date to minimize API calls.
         Returns the number of new activities synced.
         """
-        last_sync_date = self.postgres_service.get_last_sync_date()
+        last_sync_date = self.activity_repo.get_last_sync_date()
         logging.info(f"Last sync date: {last_sync_date}")
 
         if last_sync_date:
@@ -106,11 +107,13 @@ class StravaService:
                 f"Processing activity {activity.id}: {activity.name} "
                 f"(start_date: {activity.start_date})"
             )
-            if activity.id is not None and not self.postgres_service.is_activity_synced(
+            if activity.id is not None and not self.activity_repo.is_activity_synced(
                 activity.id
             ):
-                logging.info(f"Inserting new activity: {activity.name} (ID: {activity.id})")
-                inserted = await self.postgres_service.insert_activity(activity)
+                logging.info(
+                    f"Inserting new activity: {activity.name} (ID: {activity.id})"
+                )
+                inserted = await self.activity_repo.insert_activity(activity)
                 if inserted:
                     new_count += 1
                     logging.info(f"Successfully inserted activity {activity.id}")

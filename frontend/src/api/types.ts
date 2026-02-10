@@ -51,6 +51,20 @@ export interface UserRead {
   display_name?: string;
 }
 
+// Cognito types
+export interface CognitoTokenResponse {
+  id_token: string;
+  access_token: string;
+  refresh_token?: string;
+  expires_in: number;
+  token_type: string;
+}
+
+export interface CognitoUser {
+  sub: string;
+  email: string;
+}
+
 // Error response shape
 export interface ApiError {
   detail?: string;

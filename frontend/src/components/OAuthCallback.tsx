@@ -1,21 +1,25 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { stravaApi } from '../api/strava';
+import { cognitoApi } from '../api/cognito';
+import { apiClient } from '../api/client';
+import { config } from '../config';
+
+const TOKEN_KEY = 'auth_token';
 
 export function OAuthCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const code = useMemo(() => searchParams.get('code'), [searchParams]);
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
-    code ? 'loading' : 'error'
+    code ? 'loading' : 'error',
   );
   const [error, setError] = useState<string | null>(
-    code ? null : 'No authorization code provided'
+    code ? null : 'No authorization code provided',
   );
   const hasAuthorized = useRef(false);
 
   useEffect(() => {
-    // Skip if no code or already authorized (prevents double execution in React strict mode)
     if (!code || hasAuthorized.current) {
       return;
     }
@@ -24,9 +28,17 @@ export function OAuthCallback() {
 
     const authorize = async () => {
       try {
-        console.log('Authorizing with code:', code);
-        const response = await stravaApi.authorize(code);
-        console.log('Strava authorization response:', response.message);
+        if (config.authMode === 'cognito') {
+          console.log('Exchanging Cognito code for tokens');
+          const tokens = await cognitoApi.exchangeCode(code);
+          localStorage.setItem(TOKEN_KEY, tokens.id_token);
+          apiClient.setToken(tokens.id_token);
+          console.log('Cognito token exchange successful');
+        } else {
+          console.log('Authorizing with Strava code:', code);
+          const response = await stravaApi.authorize(code);
+          console.log('Strava authorization response:', response.message);
+        }
         setStatus('success');
         setTimeout(() => navigate('/dashboard'), 1500);
       } catch (err) {

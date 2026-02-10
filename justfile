@@ -93,21 +93,73 @@ lint-security:
 # Development Servers
 # ============================================================================
 
-# Run both servers (backend + frontend)
-dev:
-    @echo "Starting both servers..."
+# Run with Postgres backend (backend + frontend)
+dev-standalone:
+    @echo "Starting with Postgres backend..."
     @echo "Backend: http://localhost:8000"
     @echo "Frontend: http://localhost:5173"
     @echo ""
-    just dev-backend & just dev-frontend & wait
+    just _dev-backend "standalone" & just dev-frontend & wait
 
-# Run FastAPI server (port 8000)
-dev-backend:
-    uv run uvicorn src.main:app --reload --port 8000
+# Run with DynamoDB backend (backend + frontend)
+dev-aws:
+    @echo "Starting with DynamoDB backend..."
+    @echo "Backend: http://localhost:8000"
+    @echo "Frontend: http://localhost:5173"
+    @echo ""
+    just _dev-backend "aws" & just dev-frontend & wait
+
+# Run FastAPI server with the given backend
+_dev-backend backend:
+    DB_BACKEND={{backend}} uv run uvicorn src.main:app --reload --port 8000
 
 # Run Vite dev server (port 5173)
 dev-frontend:
     cd frontend && bun dev
+
+# ============================================================================
+# Lambda Deployment
+# ============================================================================
+
+ACCOUNT_ID := "170744924235"
+AWS_REGION := "us-east-2"
+ECR_REPO   := ACCOUNT_ID + ".dkr.ecr." + AWS_REGION + ".amazoncognito.com/running-corgium"
+ECR_IMAGE  := ACCOUNT_ID + ".dkr.ecr." + AWS_REGION + ".amazonaws.com/running-corgium:latest"
+LAMBDA_FN  := "running-corgium"
+
+# Build frontend with Cognito config, Docker image, push to ECR, and update Lambda
+deploy-lambda: _lambda-build-frontend _lambda-docker-push _lambda-update
+    @echo "Lambda deploy complete!"
+
+# Build frontend with Cognito env vars
+_lambda-build-frontend:
+    @echo "Building frontend (cognito mode)..."
+    cd frontend && \
+      VITE_AUTH_MODE=cognito \
+      VITE_COGNITO_DOMAIN=running-corgium.auth.us-east-2.amazoncognito.com \
+      VITE_COGNITO_CLIENT_ID=5a7mim2os4br7vg4ikv2tejsr \
+      VITE_COGNITO_REDIRECT_URI=https://5en3exrtx6.execute-api.us-east-2.amazonaws.com/auth/callback \
+      bun run build
+    @echo "Verifying authMode..."
+    grep -o 'authMode:"[^"]*"' frontend/dist/assets/index-*.js
+
+# Build Docker image and push to ECR
+_lambda-docker-push:
+    @echo "Logging in to ECR..."
+    aws ecr get-login-password --region {{AWS_REGION}} | docker login --username AWS --password-stdin {{ACCOUNT_ID}}.dkr.ecr.{{AWS_REGION}}.amazonaws.com
+    @echo "Building Docker image..."
+    docker build --platform linux/amd64 --provenance=false --no-cache -f Dockerfile.lambda -t running-corgium:latest .
+    @echo "Pushing to ECR..."
+    docker tag running-corgium:latest {{ECR_IMAGE}}
+    docker push {{ECR_IMAGE}}
+
+# Update Lambda function code
+_lambda-update:
+    @echo "Updating Lambda function..."
+    aws lambda update-function-code --function-name {{LAMBDA_FN}} --image-uri {{ECR_IMAGE}} --region {{AWS_REGION}}
+    @echo "Waiting for update to complete..."
+    aws lambda wait function-updated --function-name {{LAMBDA_FN}} --region {{AWS_REGION}}
+    @echo "Lambda function updated successfully."
 
 # ============================================================================
 # Cleanup

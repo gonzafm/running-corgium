@@ -1,106 +1,56 @@
 import logging
-import uuid
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import Cookie, Depends, FastAPI, HTTPException
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, Request
 
-from src.auth import auth_backend, current_active_user, fastapi_users
-from src.auth.schemas import UserCreate, UserRead, UserUpdate
-from src.database.db import async_session_maker, create_db_and_tables, engine
-from src.database.models import User
+from src.config import settings
+from src.deployment import get_factory
+from src.routers.frontend import register_spa_routes
+from src.routers.strava import create_strava_router
 from src.strava import StravaService
 
-# Configure logging
+# Configure logging — force=True so it takes effect even in Lambda
+# (where the runtime may have already configured the root logger)
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    force=True,
 )
-
-strava_service = StravaService(async_session_maker)
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await create_db_and_tables()
-    await strava_service.postgres_service.initialize()
-    yield
-    await engine.dispose()
+logger = logging.getLogger("running-corgium")
 
 
-app = FastAPI(lifespan=lifespan)
+def create_app() -> FastAPI:
+    factory = get_factory(settings.db_backend)
+    activity_repo = factory.create_repo()
+    strava_service = StravaService(activity_repo)
 
-# --- Auth routers ---
-app.include_router(
-    fastapi_users.get_auth_router(auth_backend),
-    prefix="/auth/jwt",
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_register_router(UserRead, UserCreate),
-    prefix="/auth",
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_reset_password_router(),
-    prefix="/auth",
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_verify_router(UserRead),
-    prefix="/auth",
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_users_router(UserRead, UserUpdate),
-    prefix="/users",
-    tags=["users"],
-)
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        await factory.init_db()
+        await activity_repo.initialize()
+        yield
+        await factory.shutdown()
 
+    app = FastAPI(lifespan=lifespan)
+    app.state.strava_service = strava_service
 
-@app.get("/authenticated-route")
-async def authenticated_route(user: User = Depends(current_active_user)):
-    return {"message": f"Hello {user.email}!"}
+    @app.middleware("http")
+    async def log_requests(request: Request, call_next):
+        logger.info("%s %s", request.method, request.url.path)
+        response = await call_next(request)
+        logger.info(
+            "%s %s -> %d", request.method, request.url.path, response.status_code
+        )
+        return response
+
+    factory.register_auth_routes(app)
+    app.include_router(create_strava_router(strava_service))
+
+    _frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+    register_spa_routes(app, _frontend_dist)
+
+    return app
 
 
-@app.get("/login/{name}")
-async def login_user(name: str):
-    redirect_url = strava_service.get_basic_info()
-    session_id = str(uuid.uuid4())
-    logging.info(f"Redirecting user {name} to Strava with session id {session_id}")
-    response = RedirectResponse(url=redirect_url)
-    response.set_cookie(
-        key="session_id", value=session_id, httponly=True, samesite="strict"
-    )
-    return response
-
-
-@app.get("/strava/authorize")
-async def authorize(code: str, session_id: str = Cookie(None)):
-    logging.info(f"Strava called back with code: {code}")
-    try:
-        await strava_service.authenticate_and_store(session_id, code)
-        logging.info(f"Authorization successful for session {session_id}.")
-        return {"message": code}
-    except Exception as e:
-        logging.error(f"Authorization failed: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.get("/strava/athlete")
-async def athlete(session_id: str = Cookie(None)):
-    if not session_id:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    try:
-        return await strava_service.get_athlete(session_id)
-    except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))
-
-
-@app.get("/strava/activities")
-async def list_activities(session_id: str = Cookie(None)):
-    if not session_id:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    try:
-        return await strava_service.list_activities(session_id)
-    except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+app = create_app()

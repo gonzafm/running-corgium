@@ -8,6 +8,7 @@ from src.database.postgres_service import PostgresService
 class TestPostgresService(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
         self.mock_session = AsyncMock()
+        self.mock_session.add = MagicMock()
         self.mock_session_maker = MagicMock()
         self.mock_session_maker.return_value.__aenter__.return_value = self.mock_session
         self.mock_session_maker.return_value.__aexit__.return_value = None
@@ -30,9 +31,7 @@ class TestPostgresService(unittest.IsolatedAsyncioTestCase):
         ids_result = MagicMock()
         ids_result.all.return_value = [(sid,) for sid in existing_ids]
 
-        self.mock_session.execute = AsyncMock(
-            side_effect=[max_result, ids_result]
-        )
+        self.mock_session.execute = AsyncMock(side_effect=[max_result, ids_result])
 
     async def test_initialize_with_existing_activities(self) -> None:
         last_date = datetime(2024, 1, 15, 8, 0, 0, tzinfo=timezone.utc)
@@ -127,11 +126,21 @@ class TestPostgresService(unittest.IsolatedAsyncioTestCase):
 
         mock_row1 = MagicMock()
         mock_row1.strava_id = 111
-        mock_row1.strava_response = '{"id": 111, "name": "Morning Run", "distance": 5000, "type": "Run"}'
+        mock_row1.strava_response = {
+            "id": 111,
+            "name": "Morning Run",
+            "distance": 5000,
+            "type": "Run",
+        }
 
         mock_row2 = MagicMock()
         mock_row2.strava_id = 222
-        mock_row2.strava_response = '{"id": 222, "name": "Evening Walk", "distance": 2000, "type": "Walk"}'
+        mock_row2.strava_response = {
+            "id": 222,
+            "name": "Evening Walk",
+            "distance": 2000,
+            "type": "Walk",
+        }
 
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = [mock_row1, mock_row2]
@@ -169,6 +178,7 @@ class TestPostgresServiceSessionUsage(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self) -> None:
         self.mock_session = AsyncMock()
+        self.mock_session.add = MagicMock()
         self.mock_session_maker = MagicMock()
         self.mock_session_maker.return_value.__aenter__.return_value = self.mock_session
         self.mock_session_maker.return_value.__aexit__.return_value = None
@@ -188,9 +198,7 @@ class TestPostgresServiceSessionUsage(unittest.IsolatedAsyncioTestCase):
         ids_result = MagicMock()
         ids_result.all.return_value = [(sid,) for sid in existing_ids]
 
-        self.mock_session.execute = AsyncMock(
-            side_effect=[max_result, ids_result]
-        )
+        self.mock_session.execute = AsyncMock(side_effect=[max_result, ids_result])
 
     async def test_session_created_on_initialize(self) -> None:
         """Verify that a session is created during initialization."""

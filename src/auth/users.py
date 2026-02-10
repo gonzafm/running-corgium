@@ -3,7 +3,11 @@ from collections.abc import AsyncGenerator
 
 from fastapi import Depends
 from fastapi_users import BaseUserManager, FastAPIUsers, IntegerIDMixin
-from fastapi_users.authentication import AuthenticationBackend, BearerTransport, JWTStrategy
+from fastapi_users.authentication import (
+    AuthenticationBackend,
+    BearerTransport,
+    JWTStrategy,
+)
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 
 from src.config import settings
@@ -17,13 +21,19 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     reset_password_token_secret = settings.jwt_secret.get_secret_value()
     verification_token_secret = settings.jwt_secret.get_secret_value()
 
-    async def on_after_register(self, user: User, request: object | None = None) -> None:
+    async def on_after_register(
+        self, user: User, request: object | None = None
+    ) -> None:
         logger.info("User %d has registered.", user.id)
 
-    async def on_after_forgot_password(self, user: User, token: str, request: object | None = None) -> None:
+    async def on_after_forgot_password(
+        self, user: User, token: str, request: object | None = None
+    ) -> None:
         logger.info("User %d has requested a password reset.", user.id)
 
-    async def on_after_request_verify(self, user: User, token: str, request: object | None = None) -> None:
+    async def on_after_request_verify(
+        self, user: User, token: str, request: object | None = None
+    ) -> None:
         logger.info("Verification requested for user %d. Token: %s", user.id, token)
 
 
