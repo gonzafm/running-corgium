@@ -46,8 +46,8 @@ def test_authorize():
         response = client.get(f"/strava/authorize?code={code}", follow_redirects=False)
         client.cookies.clear()
 
-        assert response.status_code == 307
-        assert response.headers["location"] == "/dashboard"
+        assert response.status_code == 200
+        assert response.json() == {"message": "Authorization successful"}
         mock_auth.assert_called_once_with(session_id, code)
 
 
